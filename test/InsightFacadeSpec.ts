@@ -19,15 +19,51 @@ describe("InsightFacadeSpec", function () {
         facade = null;
     });
     it("Testing addDataset with new id", function () {
-        let data = fs.readFileSync("./data/courses.zip");
+        let data = fs.readFileSync("./courses.zip");
         return facade.addDataset("courses", data).then(function (value: InsightResponse) {
+            expect(value.code).to.equal(204)
+        }).catch(function (err) {
+            Log.test('Error: ' + err);
+            expect.fail();
+        });
+    });
+    it("Testing addDataset with existing id", function () {
+        //let data = fs.readFileSync("./courses.zip");
+        return facade.addDataset("courses", null).then(function (value: InsightResponse) {
             expect(value.code).to.equal(201)
         }).catch(function (err) {
             Log.test('Error: ' + err);
             expect.fail();
         });
     });
-    it("Testing removeDataset with existing id", function () {
+    it("Testing addDataset with null data", function () {
+        let data = null;
+        return facade.addDataset("invalid", data).then(function (value: InsightResponse) {
+            //expect(value.code).to.equal(400)
+            //console.log(value.code);
+        }).catch(function (err: InsightResponse) {
+            console.log(err.code);
+        });
+    });
+    it("Testing addDataset with picture data", function () {
+        let data = fs.readFileSync("./IMG_4436.jpg");
+        return facade.addDataset("picture", data).then(function (value: InsightResponse) {
+            //expect(value.code).to.equal(400)
+            //console.log(value.code);
+        }).catch(function (err: InsightResponse) {
+            console.log(err.code);
+        });
+    });
+    it("Testing addDataset with picture data", function () {
+        let data = fs.readFileSync("./example.zip");
+        return facade.addDataset("invalid_zip", data).then(function (value: InsightResponse) {
+            //expect(value.code).to.equal(400)
+            //console.log(value.code);
+        }).catch(function (err: InsightResponse) {
+            console.log(err.code);
+        });
+    });
+    /*it("Testing removeDataset with existing id", function () {
         return facade.removeDataset("courses").then(function (value: InsightResponse) {
             expect(value.code).to.equal(204)
         }).catch(function (err) {
@@ -35,4 +71,20 @@ describe("InsightFacadeSpec", function () {
             expect.fail();
         });
     });
+    it("Testing removeDataset with new id", function () {
+        return facade.removeDataset("courses").then(function (value: InsightResponse) {
+            //expect(value.code).to.equal(404)
+            //console.log(value.code);
+        }).catch(function (err:InsightResponse) {
+            console.log(err.code)
+        });
+    });
+    it("Testing removeDataset with another id", function () {
+        return facade.removeDataset("invalid_id").then(function (value: InsightResponse) {
+            //expect(value.code).to.equal(404)
+            //console.log(value.code);
+        }).catch(function (err:InsightResponse) {
+            console.log(err.code);
+        });
+    });*/
 });
