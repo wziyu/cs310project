@@ -18,7 +18,7 @@ export default class InsightFacade implements IInsightFacade {
             let zip = new JSZip();
             if(fs.existsSync("./data/"+id+".dat"))
             {
-                resolve({code: 201, body: {}});
+                return resolve({code: 201, body: {}});
             }
             zip.loadAsync(content).then(function (data: any) {
                 let proList: Promise<string>[] = [];
@@ -32,8 +32,8 @@ export default class InsightFacade implements IInsightFacade {
                 Promise.all(proList).then(strings=>{
                     for(let i=1; i<objkeys.length; i++)
                     {
-                        //if(strings[i-1].charAt(0)=="\"")
-                          //  reject({code: 400, body: {'error': "Could not parse JSON"}});
+                        if(strings[i-1].charAt(0)=="\"")
+                            reject({code: 400, body: {'error': "Could not parse JSON"}});
                         let name: string = objkeys[i].split('/')[1];
                         let s: string = "\""+name+"\""+":"+strings[i-1];
                         s = "{" + s + "}";
@@ -55,7 +55,7 @@ export default class InsightFacade implements IInsightFacade {
                 });
 
             }).catch(function (err: any) {
-                reject({code: 400, body: err});
+                reject({code: 400, body: {"Error": err.toString()}});
             });
         });
     }
