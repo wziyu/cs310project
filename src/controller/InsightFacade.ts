@@ -21,7 +21,6 @@ export default class InsightFacade implements IInsightFacade {
                 resolve({code: 201, body: {}});
             }
             zip.loadAsync(content).then(function (data: any) {
-                //console.log(data);
                 let proList: Promise<string>[] = [];
                 let keys = Object.keys(data);
                 let objkeys = Object.keys(data[keys[0]]);
@@ -33,13 +32,12 @@ export default class InsightFacade implements IInsightFacade {
                 Promise.all(proList).then(strings=>{
                     for(let i=1; i<objkeys.length; i++)
                     {
-                        if(strings[i-1].charAt(0)=="\"")
-                            reject({code: 400, body: {'error': "Could not parse JSON"}});
+                        //if(strings[i-1].charAt(0)=="\"")
+                          //  reject({code: 400, body: {'error': "Could not parse JSON"}});
                         let name: string = objkeys[i].split('/')[1];
                         let s: string = "\""+name+"\""+":"+strings[i-1];
                         s = "{" + s + "}";
                         let parsed = JSON.parse(s);
-                        //console.log(s);
                         to_write_list.push(parsed);
                     }
                     if(fs.existsSync("./data"))
@@ -57,8 +55,7 @@ export default class InsightFacade implements IInsightFacade {
                 });
 
             }).catch(function (err: any) {
-                //console.log(err);
-                resolve({code: 400, body: {}});
+                reject({code: 400, body: err});
             });
         });
     }
@@ -68,16 +65,13 @@ export default class InsightFacade implements IInsightFacade {
             let path:string = "./data/" + id + ".dat";
             if (!fs.existsSync("./data")||!fs.existsSync(path))
             {
-                resolve({code: 404, body: {}});
+                reject({code: 404, body: {}});
             }
             else
             {
-                console.log("in else");
                 fs.unlinkSync(path);
                 resolve({code: 204, body: {}});
             }
-        }).catch(function (err) {
-            console.log(err);
         });
 
     }
