@@ -52,10 +52,12 @@ export default class InsightFacade implements IInsightFacade {
                         fs.writeFileSync(path, JSON.stringify(to_write_list));
                     }
                     resolve({code: 204, body: {}});
+                }).catch(function (err){
+                    reject({code: 400, body: {"error": err.toString()}});
                 });
 
             }).catch(function (err: any) {
-                reject({code: 400, body: {"Error": err.toString()}});
+                reject({code: 400, body: {"error": err.toString()}});
             });
         });
     }
