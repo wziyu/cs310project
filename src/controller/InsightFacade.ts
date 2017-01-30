@@ -20,7 +20,7 @@ export default class InsightFacade implements IInsightFacade {
             {
                 return resolve({code: 201, body: {}});
             }
-            zip.loadAsync(content).then(function (data: any) {
+            zip.loadAsync(content, {base64: true}).then(function (data: any) {
                 let proList: Promise<string>[] = [];
                 let keys = Object.keys(data);
                 let objkeys = Object.keys(data[keys[0]]);
