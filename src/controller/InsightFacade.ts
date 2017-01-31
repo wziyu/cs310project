@@ -15,12 +15,12 @@ export default class InsightFacade implements IInsightFacade {
     addDataset(id: string, content: string): Promise<InsightResponse> {
 
         return new Promise<InsightResponse>(function(resolve, reject) {
-            let zip = new JSZip();
-            if(fs.existsSync("./data/"+id+".dat"))
-            {
-                return resolve({code: 201, body: {}});
-            }
+            let zip = new JSZip();         
             zip.loadAsync(content, {base64: true}).then(function (data: any) {
+                if(fs.existsSync("./data/"+id+".dat"))
+                {
+                    return resolve({code: 201, body: {}});
+                }
                 let proList: Promise<string>[] = [];
                 let keys = Object.keys(data);
                 let objkeys = Object.keys(data[keys[0]]);
