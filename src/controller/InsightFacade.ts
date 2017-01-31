@@ -57,13 +57,13 @@ export default class InsightFacade implements IInsightFacade {
                         let path:string = "./data/" + id + ".dat";
                         fs.writeFileSync(path, JSON.stringify(to_write_list));
                     }
-                    resolve({code: 204, body: {}});
+                    return resolve({code: 204, body: {}});
                 }).catch(function (err){
-                    reject({code: 400, body: {"error": err.toString()}});
+                    return reject({code: 400, body: {"error": err.toString()}});
                 });
 
             }).catch(function (err: any) {
-                reject({code: 400, body: {"error": err.toString()}});
+                return reject({code: 400, body: {"error": err.toString()}});
             });
         });
     }
