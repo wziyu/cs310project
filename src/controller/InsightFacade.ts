@@ -17,17 +17,17 @@ export default class InsightFacade implements IInsightFacade {
         return new Promise<InsightResponse>(function(resolve, reject) {
             let zip = new JSZip();
             zip.loadAsync(content, {base64: true}).then(function (data: any) {
-                if(fs.existsSync("./data/"+id+".dat"))
-                {
-                    return resolve({code: 201, body: {}});
-                }
                 let proList: Promise<string>[] = [];
                 let keys = Object.keys(data);
                 let objkeys = Object.keys(data[keys[0]]);
                 let processed_results:string[] = [];
                 for(let i=1; i<objkeys.length; i++)
                 {
-                    proList.push(zip.file(objkeys[i]).async("string"));
+                    let file = zip.file(objkeys[i]);
+                    if (file)
+                    {
+                        proList.push(file.async("string"));
+                    }
                 }
                 Promise.all(proList).then(strings=>{
                     for(let i=1; i<objkeys.length; i++)
@@ -36,11 +36,9 @@ export default class InsightFacade implements IInsightFacade {
                             return reject({code: 400, body: {'error': "Could not parse JSON"}});
                         let temp = JSON.parse(strings[i-1]);
                         let temp_keys = Object.keys(temp);
-                        //console.log(temp_keys.indexOf('result'));
                         if(temp_keys.indexOf('result')<0||temp['result']===undefined)
                             return reject({code: 400, body: {'error': "Invalid data inside zip file"}});
                         let results = temp['result'];
-                        //console.log(results);
                         for(let r of results)
                         {
                             let clean_input_keys =
@@ -71,7 +69,6 @@ export default class InsightFacade implements IInsightFacade {
                             let r_keys = Object.keys(r);
                             for(let k of clean_input_keys)
                             {
-                                //console.log(r_keys.indexOf(k));
                                 if(r_keys.indexOf(k)<0)
                                 {
                                     clean_input_keys.splice(clean_input_keys.indexOf(k), 1);
@@ -86,24 +83,32 @@ export default class InsightFacade implements IInsightFacade {
                                     clean_str+=(clean_output_keys[i]+": "+r[clean_input_keys[i]]+" ");
                             }
                             let clean_to_push = "{"+clean_str+"}";
-                            //console.log(clean_to_push);
-                            //let parsed = JSON.parse(clean_to_push);
                             processed_results.push(clean_to_push.toString());
                         }
-                        //console.log(processed_results);
                     }
+                    if(processed_results.length === 0)
+                        return reject({code: 400, body: {'error': "Nothing to write"}});
                     if(fs.existsSync("./data"))
                     {
-                        let path:string = "./data/" + id + ".dat";
-                        fs.writeFileSync(path, JSON.stringify(processed_results));
+                        if(fs.existsSync("./data/"+id+".dat"))
+                        {
+                            fs.writeFileSync("./data/"+id+".dat", JSON.stringify(processed_results));
+                            return resolve({code: 201, body: {}});
+                        }
+                        else
+                        {
+                            let path:string = "./data/" + id + ".dat";
+                            fs.writeFileSync(path, JSON.stringify(processed_results));
+                            return resolve({code: 204, body: {}});
+                        }
                     }
                     else
                     {
                         fs.mkdirSync("./data");
                         let path:string = "./data/" + id + ".dat";
                         fs.writeFileSync(path, JSON.stringify(processed_results));
+                        return resolve({code: 204, body: {}});
                     }
-                    return resolve({code: 204, body: {}});
                 }).catch(function (err){
                     return reject({code: 400, body: {"error": err.toString()}});
                 });
@@ -132,6 +137,11 @@ export default class InsightFacade implements IInsightFacade {
 
     performQuery(query: QueryRequest): Promise<InsightResponse> {
 
-            return null;
+            return new Promise<InsightResponse>(function (resolve, reject) {
+                //let query_json = JSON.parse(query.toString());
+                let query_keys = Object.keys(query);
+                console.log(query_keys);
+                resolve({code: 200, body: {}});
+            });
     }
 }
