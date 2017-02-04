@@ -92,6 +92,7 @@ export default class InsightFacade implements IInsightFacade {
                     {
                         if(fs.existsSync("./data/"+id+".dat"))
                         {
+                            console.log("rewriting...");
                             fs.writeFileSync("./data/"+id+".dat", JSON.stringify(processed_results));
                             return resolve({code: 201, body: {}});
                         }
@@ -137,11 +138,180 @@ export default class InsightFacade implements IInsightFacade {
 
     performQuery(query: QueryRequest): Promise<InsightResponse> {
 
-            return new Promise<InsightResponse>(function (resolve, reject) {
+            /*return new Promise<InsightResponse>(function (resolve, reject) {
                 //let query_json = JSON.parse(query.toString());
                 let query_keys = Object.keys(query);
                 console.log(query_keys);
                 resolve({code: 200, body: {}});
+            });*/
+        return new Promise<InsightResponse>(function (resolve, reject) {
+            //let query_json = JSON.parse(query.toString());
+            let query_keys = Object.keys(query);
+
+            let json= fs.readFileSync("./courses.dat").toString();
+            let jonj=JSON.parse(json);
+
+            console.log(jonj);
+
+            let where:any = query.WHERE;
+            let q:any = Object.keys(where)[0];
+            let w:any= where[q];
+
+            let filtered_data:any = helper(q,w,jonj);
+
+
+
+            let column:any = query.OPTIONS["COLUMNS"];
+            let retData: any[] = [];
+
+            for (let v of filtered_data) {
+                let newEntry: any = {};
+                column.forEach(function (k:any) {
+                    return newEntry[k] = v.hasOwnProperty(k) ? v[k] : null;
+                });
+                retData.push(newEntry);
+            }
+
+            let order:any = query.OPTIONS["ORDER"];
+            retData.sort(function(a:any,b:any){
+                return a[order]-b[order];
             });
+
+            return resolve({code: 200, body: {
+                render: 'TABLE',
+                result: retData
+            }
+            });
+            //return re;
+
+            // if()
+            // {
+            //     reject({code: 404, body: {}});
+            // }
+            // else if()
+            // {
+            //     reject({code: 400, body: {}});
+            //
+            // }
+            // console.log(query_keys);
+            // else
+            // {
+            //     resolve({code: 200, body: {}});
+            //
+        });
     }
+
 }
+
+function intersect(a:any,b:any){
+    let t;
+    if (b.length>a.length)
+    {
+        t=b;
+        b=a;
+        a=t;
+    }
+    return a.filter(function (e:any){
+        if (b.indexOf(e)!==-1) return true;
+    });
+}
+function union(a:any,b:any){
+    let t;
+    if (b.length>a.length)
+    {
+        t=b;
+        b=a;
+        a=t;
+    }
+    return a.filter(function (e:any){
+        if (b.indexOf(e)===-1) return true;
+    });
+}
+
+
+function helper(key:string,filter:any,coursedata:any[]){
+    let results = [];
+    let last:any = [];
+    let first = 1;
+    let courses:any;
+    let query_keys:any;
+    let query_number:any;
+    switch (key) {
+        //let results = [];
+        case "AND":
+            //let results = [];
+            for (let k of filter){
+                let keys = Object.keys(k);
+                let a=keys[0];
+                let b=k[a];
+                let result = helper(a,b,coursedata);
+                results.push(result);
+            }
+            last = [];
+            first = 1;
+            for (let r of results) {
+                if (first === 1) {
+                    last = r;
+                    first = 0;
+                }else {
+                    last = intersect(r, last);
+                }
+            }
+
+            return last;
+
+
+
+        case "OR":
+            //let results = [];
+            for (let k of filter){
+                let keys = Object.keys(k);
+                let a=keys[0];
+                let b=k[a];
+                let result = helper(a,b,coursedata);
+                results.push(result);
+            }
+            last = [];
+            first = 1;
+            for (let r of results) {
+                if (first === 1) {
+                    last = r;
+                    first = 0;
+                }else {
+                    last = last.concat(union(r, last));
+                }
+            }
+
+            return last;
+        case "NOT":
+            let a = Object.keys(filter)[0];
+            let b= filter[a];
+            let result=helper(a,b,coursedata);
+            courses = coursedata.filter(elem => !result.includes(elem)) ;
+            return courses;
+
+        case "EQ":
+            query_keys = Object.keys(filter)[0];
+            query_number=filter[query_keys];
+            courses = coursedata.filter(elem => (elem as any)[query_keys] = query_number);
+            return courses;
+        case "GT":
+            query_keys = Object.keys(filter)[0];
+            query_number=filter[query_keys];
+            courses = coursedata.filter(elem => (elem as any)[query_keys] > query_number);
+            return courses;
+        case "LT":
+            query_keys = Object.keys(filter)[0];
+            query_number=filter[query_keys];
+            courses = coursedata.filter(elem => (elem as any)[query_keys] < query_number);
+            return courses;
+        case "IS":
+            query_keys = Object.keys(filter)[0];
+            query_number=filter[query_keys];
+            courses = coursedata.filter(elem => (elem as any)[query_keys] = query_number);
+            return courses;
+        default:throw new Error("not valid filter");
+    }
+
+}
+
