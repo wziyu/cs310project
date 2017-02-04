@@ -87,4 +87,26 @@ describe("InsightFacadeSpec", function () {
             console.log(err.code);
         });
     });*/
+    it("testing process Data function", function() {
+        let content = '{"WHERE":{"GT":{"courses_avg":97}},"OPTIONS":{"COLUMNS":["courses_dept","courses_avg"],"ORDER":"courses_avg","FORM":"TABLE"}}';//"https://github.com/ubccpsc/310/blob/2017jan/project/courses.zip"; //empty content, not valid
+        let expected : any ="";
+        // let q:QueryRequestImpl;
+        // q.setBody();
+
+
+        return new InsightFacade().performQuery({WHERE:{"GT":{"courses_avg":97}},OPTIONS:{"COLUMNS":["courses_dept","courses_avg"],"ORDER":"courses_avg","FORM":"TABLE"}})
+            .then(function (result: any) { //what the paramter is goes here
+                Log.info(result);
+
+            })
+            .catch(function (err:any) {
+                expect.fail();
+
+                // done()
+            })
+    });
+
+
+
+
 });
