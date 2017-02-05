@@ -139,15 +139,54 @@ export default class InsightFacade implements IInsightFacade {
 
         return new Promise<InsightResponse>(function (resolve, reject) {
             //let query_json = JSON.parse(query.toString());
-            let query_keys = Object.keys(query);
+            //let query_keys = Object.keys(query);
 
             let json= fs.readFileSync("./data/courses.dat").toString();
             let jonj=JSON.parse(json);
+            let query_keys = Object.keys(query);
+            if (query_keys.length < 2) {
+                return reject({code: 400, body: {"error": "Invalid query"}});
+            }
+            else if (query_keys.indexOf("WHERE") < 0 || query_keys.indexOf("OPTIONS") < 0) {
+                return reject({code: 400, body: {"error": "Invalid query"}});
+            }
 
             let where:any = query.WHERE;
-            if (where==null) {
-                reject({code: 400, body: {}});
+
+
+
+
+
+            let missing:string[] = [];
+            let c_list:string[] = [];
+            let ids:string[] = [];
+            let response = validateOptions(query["OPTIONS"], missing, c_list, ids);
+            //console.log(response);
+            if(response!=true)
+            {
+                return reject(response);
             }
+            else if(missing.length > 0)
+            {
+                return reject({code: 424, body: missing});
+            }
+            response = validateWhere(query["WHERE"], missing);
+            //console.log(query["WHERE"]);
+            if(response!=true)
+            {
+                return reject(response);
+            }
+            else if(missing.length > 0)
+            {
+                return reject({code: 424, body: missing});
+            }
+
+
+
+
+
+
+
 
             var q: any = Object.keys(where)[0];
             var w: any = where[q];
@@ -174,30 +213,335 @@ export default class InsightFacade implements IInsightFacade {
                 result: retData
             };
             ;
-            console.log(retData);
-            return resolve({code: 200, body: {re}});
+            //console.log(retData);
+            return resolve({code: 200, body: re});
 
 
 
 
-            // if()
-            // {
-            //     reject({code: 404, body: {}});
-            // }
-            // else if()
-            // {
-            //     reject({code: 400, body: {}});
-            //
-            // }
-            // console.log(query_keys);
-            // else
-            // {
 
-            //
         });
     }
 
 }
+
+function validateOptions(options:any, missing:string[], c_list:string[], ids:string[])
+{
+
+    let opt_keys = Object.keys(options);
+    if(opt_keys.length != 3)
+        return {code: 400, body: {"error": "Invalid query"}};
+    else if(opt_keys.indexOf("COLUMNS")<0||opt_keys.indexOf("ORDER")<0||opt_keys.indexOf("FORM")<0)
+        return {code: 400, body: {"error": "Invalid query"}};
+    else
+    {
+        let columns = options["COLUMNS"];
+        let order = options["ORDER"];
+        for(let c of columns)
+        {
+            let slices = c.split("_");
+            if(!fs.existsSync("./data/" + slices[0] + ".dat"))
+            {
+                if(missing.indexOf(slices[0])<0)
+                    missing.push(slices[0]);
+            }
+            else
+            {
+                if(c_list.indexOf(c)<0)
+                {
+                    c_list.push(c);
+                }
+                if(ids.indexOf(slices[0])<0)
+                {
+                    ids.push(slices[0]);
+                }
+            }
+        }
+        if(!fs.existsSync("./data/"+order.split("_")[0]+".dat"))
+        {
+            if(missing.indexOf(order.split("_")[0])<0)
+                missing.push(order.split("_")[0]);
+        }
+        return true;
+    }
+}
+
+function validateWhere(where:any, missing:string[])
+{
+    let where_keys = Object.keys(where);
+    for (let k in where_keys)
+    {
+        switch (where_keys[k]) {
+            case 'AND':
+                let h1_keys_and = Object.keys(where["AND"]);
+                if (h1_keys_and.length < 1)
+                    return {
+                        code: 400,
+                        body: {"error": "Invalid query: AND should have at least one condition"}
+                    };
+                else {
+                    for (let k in h1_keys_and) {
+                        let s = where["AND"][k];
+                        let s_keys = Object.keys(s);
+                        for (let sk in s_keys) {
+                            let h3 = s[s_keys[sk]];
+                            if (s_keys[sk] == "AND" || s_keys[sk] == "OR") {
+                                let h3_keys = Object.keys(h3);
+                                for (let hk in h3_keys) {
+                                    let temp_keys = Object.keys(h3[hk]);
+                                    if (temp_keys.indexOf("AND") > -1 || temp_keys.indexOf("OR") > -1)
+                                        return {
+                                            code: 400,
+                                            body: {"error": "OR should contain an array"}
+                                        };
+                                    else {
+                                        for (let key in temp_keys) {
+                                            let target: string;
+                                            switch (key) {
+                                                case 'LT':
+                                                    target = h3[hk]["LT"];
+                                                    break;
+                                                case 'GT':
+                                                    target = h3[hk]["GT"];
+                                                    break;
+                                                case 'EQ':
+                                                    target = h3[hk]["EQ"];
+                                                    break;
+                                                case 'IS':
+                                                    target = h3[hk]["IS"];
+                                                    break;
+                                                case 'NOT':
+                                                    target = h3[hk]["NOT"];
+                                                    break;
+                                            }
+                                            if (target == null)
+                                                return {code: 400, body: {"error": "Invalid query"}};
+                                            let target_key = Object.keys(target);
+                                            let string = target_key.toString();
+                                            //console.log(string);
+                                            if(!fs.existsSync("./data/"+
+                                                    string.split("_")[0]+".dat"))
+                                                missing.push(Object.keys(target)[0].split("_")[0]);
+                                        }
+                                    }
+
+                                }
+                            }
+                            else {
+                                let target: string;
+                                switch (s_keys[sk]) {
+                                    case 'LT':
+                                        target = h3["LT"];
+                                        break;
+                                    case 'GT':
+                                        target = h3["GT"];
+                                        break;
+                                    case 'EQ':
+                                        target = h3["EQ"];
+                                        break;
+                                    case 'IS':
+                                        target = h3["IS"];
+                                        break;
+                                    case 'NOT':
+                                        target = h3["NOT"];
+                                        break;
+                                }
+                                if (target == null)
+                                    return {code: 400, body: {"error": "Invalid query"}};
+                                let target_key = Object.keys(target);
+                                let string = target_key.toString();
+                                //console.log(string);
+                                if(!fs.existsSync("./data/"+
+                                        string.split("_")[0]+".dat"))
+                                    missing.push(Object.keys(target)[0].split("_")[0]);
+                            }
+                        }
+                    }
+                }
+                break;
+            case 'OR':
+                let h1_keys_or = Object.keys(where["OR"]);
+                if (h1_keys_or.length < 1)
+                    return {
+                        code: 400,
+                        body: {"error": "Invalid query: OR should have at least one condition"}
+                    };
+                else {
+                    for (let k in h1_keys_or) {
+                        let s = where["OR"][k];
+                        let s_keys = Object.keys(s);
+                        for (let sk in s_keys) {
+                            let h3 = s[s_keys[sk]];
+                            if (s_keys[sk] == "AND" || s_keys[sk] == "OR") {
+                                let h3_keys = Object.keys(h3);
+                                for (let hk in h3_keys) {
+                                    let temp_keys = Object.keys(h3[hk]);
+                                    if (temp_keys.indexOf("AND") > -1 || temp_keys.indexOf("OR") > -1)
+                                        return {
+                                            code: 400,
+                                            body: {"error": "OR should contain an array"}
+                                        };
+                                    else {
+                                        for (let key in temp_keys) {
+                                            let target: any;
+                                            switch (temp_keys[key]) {
+                                                case 'LT':
+                                                    target = h3[hk]["LT"];
+                                                    break;
+                                                case 'GT':
+                                                    target = h3[hk]["GT"];
+                                                    break;
+                                                case 'EQ':
+                                                    target = h3[hk]["EQ"];
+                                                    break;
+                                                case 'IS':
+                                                    target = h3[hk]["IS"];
+                                                    break;
+                                                case 'NOT':
+                                                    target = h3[hk]["NOT"];
+                                                    break;
+                                            }
+                                            if (target == null)
+                                                return {code: 400, body: {"error": "Invalid query"}};
+                                            let target_key = Object.keys(target);
+                                            let string = target_key.toString();
+                                            //console.log(string);
+                                            if(!fs.existsSync("./data/"+
+                                                    string.split("_")[0]+".dat"))
+                                                missing.push(Object.keys(target)[0].split("_")[0]);
+                                        }
+                                    }
+
+                                }
+                            }
+                            else {
+                                let target: string;
+                                switch (s_keys[sk]) {
+                                    case 'LT':
+                                        target = h3["LT"];
+                                        break;
+                                    case 'GT':
+                                        target = h3["GT"];
+                                        break;
+                                    case 'EQ':
+                                        target = h3["EQ"];
+                                        break;
+                                    case 'IS':
+                                        target = h3["IS"];
+                                        break;
+                                    case 'NOT':
+                                        target = h3["NOT"];
+                                        break;
+                                }
+                                if (target == null)
+                                    return {code: 400, body: {"error": "Invalid query"}};
+                                let target_key = Object.keys(target);
+                                let string = target_key.toString();
+                                //console.log(string);
+                                if(!fs.existsSync("./data/"+
+                                        string.split("_")[0]+".dat"))
+                                    missing.push(Object.keys(target)[0].split("_")[0]);
+                            }
+
+                        }
+                    }
+                }
+                break;
+            case
+            "LT":
+                let h1_keys_lt = Object.keys(where["LT"]);
+                if (h1_keys_lt.length != 1)
+                    return {
+                        code: 400,
+                        body: {"error": "Invalid query: LT should have one condition"}
+                    };
+                else
+                {
+                    let string = h1_keys_lt.toString();
+                    //console.log(string);
+                    if(!fs.existsSync("./data/"+
+                            string.split("_")[0]+".dat"))
+                        missing.push(string.split("_")[0]);
+                }
+                break;
+            case
+            "GT":
+                let h1_keys_gt = Object.keys(where["GT"]);
+                if (h1_keys_gt.length != 1)
+                    return {
+                        code: 400,
+                        body: {"error": "Invalid query: GT should have one condition"}
+                    };
+                else
+                {
+                    let string = h1_keys_gt.toString();
+                    //console.log(string);
+                    if(!fs.existsSync("./data/"+
+                            string.split("_")[0]+".dat"))
+                        missing.push(string.split("_")[0]);
+                }
+                break;
+            case
+            "EQ":
+                let h1_keys_eq = Object.keys(where["EQ"]);
+                if (h1_keys_eq.length != 1)
+                    return {
+                        code: 400,
+                        body: {"error": "Invalid query: EQ should have one condition"}
+                    };
+                else
+                {
+                    let string = h1_keys_eq.toString();
+                    //console.log(string);
+                    if(!fs.existsSync("./data/"+
+                            string.split("_")[0]+".dat"))
+                        missing.push(string.split("_")[0]);
+                }
+                break;
+            case
+            "IS":
+                let h1_keys_is = Object.keys(where["GT"]);
+                if (h1_keys_is.length != 1)
+                    return {
+                        code: 400,
+                        body: {"error": "Invalid query: IS should have one condition"}
+                    };
+                else
+                {
+                    let string = h1_keys_is.toString();
+                    //console.log(string);
+                    if(!fs.existsSync("./data/"+
+                            string.split("_")[0]+".dat"))
+                        missing.push(string.split("_")[0]);
+                }
+                break;
+            case
+            "NOT":
+                let h1_keys_not = Object.keys(where["NOT"]);
+                if (h1_keys_not.length != 1)
+                    return {
+                        code: 400,
+                        body: {"error": "Invalid query: NOT should have one condition"}
+                    };
+                else
+                {
+                    let string = h1_keys_not.toString();
+                    //console.log(string);
+                    if(!fs.existsSync("./data/"+
+                            string.split("_")[0]+".dat"))
+                        missing.push(string.split("_")[0]);
+                }
+                break;
+            default:
+                return {code: 400, body: {"error": "Invalid query"}};
+        }
+    }
+    return true;
+}
+
+
+
+
 
 function intersect(a:any,b:any){
 
@@ -254,7 +598,7 @@ function helper(key:string,filter:any,coursedata:any[]){
                 results.push(result);
             }
             var last:any = [];
-            var first = 1;
+
             for (var r of results) {
                 last = intersect(last, r);
             }
