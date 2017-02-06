@@ -4,6 +4,7 @@
 import {IInsightFacade, InsightResponse, QueryRequest} from "./IInsightFacade";
 
 import Log from "../Util"
+import {isUndefined} from "util";
 let JSZip = require("jszip");
 let fs = require("fs");
 
@@ -129,29 +130,24 @@ export default class InsightFacade implements IInsightFacade {
                 return reject({code: 400, body: {"error": "Invalid query: missing where or options 2"}});
             }
             //console.log(query["OPTIONS"]);
-            let missing:string[] = [];
-            let c_list:string[] = [];
-            let ids:string[] = [];
+            let missing: string[] = [];
+            let c_list: string[] = [];
+            let ids: string[] = [];
             let response = validateOptions(JSON.parse(JSON.stringify(query))["OPTIONS"], missing, c_list, ids);
             //console.log(response);
-            if(response!=true)
-            {
+            if (response != true) {
                 return reject(response);
             }
-            else if(missing.length > 0)
-            {
+            else if (missing.length > 0) {
                 return reject({code: 424, body: missing});
             }
-            else
-            {
+            else {
                 response = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list);
                 //console.log(response);
-                if (missing.length > 0)
-                {
+                if (missing.length > 0) {
                     return reject({code: 424, body: missing});
                 }
-                else if (response != true)
-                {
+                else if (response != true) {
                     return reject(response);
                 }
 
@@ -159,13 +155,12 @@ export default class InsightFacade implements IInsightFacade {
             }
 
 
-
 //dui
-            let where:any = JSON.parse(JSON.stringify(query))["WHERE"];
+            let where: any = JSON.parse(JSON.stringify(query))["WHERE"];
             var keys: any = Object.keys(where)[0];
             var filter: any = where[keys];
-            let json= fs.readFileSync("./data/courses.dat").toString();
-            let jonj=JSON.parse(json);
+            let json = fs.readFileSync("./data/courses.dat").toString();
+            let jonj = JSON.parse(json);
 
             var filtered_data: any = helper(keys, filter, jonj);
             let column: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["COLUMNS"];
@@ -178,11 +173,12 @@ export default class InsightFacade implements IInsightFacade {
                 });
                 retData.push(newEntry);
             }
-
-            let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
-            retData.sort(function (a: any, b: any) {
-                return a[order] - b[order];
-            });
+            if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
+                let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
+                retData.sort(function (a: any, b: any) {
+                    return a[order] - b[order];
+                });
+            }
 
             let re = {
                 render: 'TABLE',
@@ -194,42 +190,42 @@ export default class InsightFacade implements IInsightFacade {
     }
 }
 
-function intersect(a:any,b:any){
+function intersect(a: any, b: any) {
 
-    if(a.length == 0) {
+    if (a.length == 0) {
         return b;
     }
 
     var re = [];
-    for(let a1 of a){
+    for (let a1 of a) {
         var flag = 0;
-        for(let b1 of b){
-            if(b1.courses_uuid == a1.courses_uuid) {
+        for (let b1 of b) {
+            if (b1.courses_uuid == a1.courses_uuid) {
                 flag = 1;
                 break;
             }
         }
-        if(flag == 1)
+        if (flag == 1)
             re.push(a1);
     }
 
     return re;
 }
-function union(a:any,b:any){
-    if(a.length == 0) {
+function union(a: any, b: any) {
+    if (a.length == 0) {
         return b;
     }
 
     var re = [];
-    for(let a1 of a){
+    for (let a1 of a) {
         var flag = 0;
-        for(let b1 of b){
-            if(b1.courses_uuid == a1.courses_uuid) {
+        for (let b1 of b) {
+            if (b1.courses_uuid == a1.courses_uuid) {
                 flag = 1;
                 break;
             }
         }
-        if(flag == 0)
+        if (flag == 0)
             re.push(a1);
     }
     re = re.concat(b);
@@ -237,18 +233,18 @@ function union(a:any,b:any){
 }
 
 
-function helper(key:string,filter:any,coursedata:any[]){
+function helper(key: string, filter: any, coursedata: any[]) {
     switch (key) {
         case "AND":
             var results = []
-            for (var k of filter){
+            for (var k of filter) {
                 let keys = Object.keys(k);
-                var a=keys[0];
-                var b=k[a];
-                var result = helper(a,b,coursedata);
+                var a = keys[0];
+                var b = k[a];
+                var result = helper(a, b, coursedata);
                 results.push(result);
             }
-            var last:any = [];
+            var last: any = [];
 
             for (var r of results) {
                 last = intersect(last, r);
@@ -256,44 +252,56 @@ function helper(key:string,filter:any,coursedata:any[]){
             return last;
 
 
-
         case "OR":
-            var results = []
-            for (var k of filter){
+            var results = [];
+            for (var k of filter) {
                 let keys = Object.keys(k);
-                var a=keys[0];
-                var b=k[a];
-                var result = helper(a,b,coursedata);
+                var a = keys[0];
+                var b = k[a];
+                var result = helper(a, b, coursedata);
                 results.push(result);
             }
-            var last:any = [];
+            var last: any = [];
             for (var r of results) {
                 last = union(last, r);
             }
             return last;
         case "NOT":
             var a = Object.keys(filter)[0];
-            var b= filter[a];
-            var result=helper(a,b,coursedata);
-            var courses:any = coursedata.filter(elem => !result.includes(elem)) ;
+            var b = filter[a];
+            var result = helper(a, b, coursedata);
+
+            var courses: any = [];
+            var numbers: any = [];
+
+            for (let n of result) {
+                numbers.push(n['courses_uuid'])
+            }
+            for(let v of coursedata){
+                if(numbers.indexOf(v['courses_uuid']) == -1){
+                    courses.push(v);
+                }
+            }
+
+            //var courses: any = coursedata.filter(elem => !result.includes(elem));
             return courses;
 
         case "EQ":
             var query_keys = Object.keys(filter)[0];
-            var query_number=filter[query_keys];
-            var courses:any = [];
-            for(let v of coursedata){
-                if(v[query_keys] == query_number){
+            var query_number = filter[query_keys];
+            var courses: any = [];
+            for (let v of coursedata) {
+                if (v[query_keys] == query_number) {
                     courses.push(v);
                 }
             }
             return courses;
         case "GT":
             var query_keys = Object.keys(filter)[0];
-            var query_number=filter[query_keys];
-            var courses:any = [];//coursedata.filter(elem => (elem as any)[query_keys] > query_number);
-            for(let v of coursedata){
-                if(v[query_keys] > query_number){
+            var query_number = filter[query_keys];
+            var courses: any = [];//coursedata.filter(elem => (elem as any)[query_keys] > query_number);
+            for (let v of coursedata) {
+                if (v[query_keys] > query_number) {
                     courses.push(v);
                 }
             }
@@ -301,10 +309,10 @@ function helper(key:string,filter:any,coursedata:any[]){
             return courses;
         case "LT":
             var query_keys = Object.keys(filter)[0];
-            var query_number=filter[query_keys];
-            var courses:any = [];//coursedata.filter(elem => (elem as any)[query_keys] > query_number);
-            for(let v of coursedata){
-                if(v[query_keys] < query_number){
+            var query_number = filter[query_keys];
+            var courses: any = [];//coursedata.filter(elem => (elem as any)[query_keys] > query_number);
+            for (let v of coursedata) {
+                if (v[query_keys] < query_number) {
                     courses.push(v);
                 }
             }
@@ -312,37 +320,37 @@ function helper(key:string,filter:any,coursedata:any[]){
             return courses;
         case "IS":
             var query_keys = Object.keys(filter)[0];
-            var query_number=filter[query_keys];
-            var courses:any = [];
-            for(let v of coursedata){
-                if(query_number.indexOf("*") == 0 && query_number.length > 1){
-                    if(query_number.indexOf("*", 1) == query_number.length-1){
-                        if(v[query_keys].endsWith(query_number.substring(1,query_number.length-1)) ){
+            var query_number = filter[query_keys];
+            var courses: any = [];
+            for (let v of coursedata) {
+                if (query_number.indexOf("*") == 0 && query_number.length > 1) {
+                    if (query_number.indexOf("*", 1) == query_number.length - 1) {
+                        if (v[query_keys].toString().endsWith(query_number.substring(1, query_number.length - 1))) {
                             courses.push(v);
                         }
-                    }else {
-                        if(v[query_keys].endsWith(query_number.substring(1))){
+                    } else {
+                        if (v[query_keys].toString().endsWith(query_number.substring(1))) {
                             courses.push(v);
                         }
                     }
-                }else if(query_number.indexOf("*") == query_number.length - 1 && query_number.length > 1){
-                    if(v[query_keys].startsWith(query_number.substring(0,query_number.length - 1))){
+                } else if (query_number.indexOf("*") == query_number.length - 1 && query_number.length > 1) {
+                    if (v[query_keys].toString().startsWith(query_number.substring(0, query_number.length - 1))) {
                         courses.push(v);
                     }
                 }
                 else {
-                    if (v[query_keys] == query_number) {
+                    if (v[query_keys].toString() == query_number) {
                         courses.push(v);
                     }
                 }
             }
             return courses;
-        default:throw new Error("not valid filter");
+        default:
+            throw new Error("not valid filter");
     }
 
 }
-function validateOptions(options:any, missing:string[], c_list:string[], ids:string[])
-{
+function validateOptions(options: any, missing: string[], c_list: string[], ids: string[]) {
     let clean_output_keys =
         [
             'courses_dept',
@@ -356,57 +364,52 @@ function validateOptions(options:any, missing:string[], c_list:string[], ids:str
             'courses_uuid'
         ];
     let opt_keys = Object.keys(options);
-    if(opt_keys.length != 3)
+    if (opt_keys.length < 2)
         return {code: 400, body: {"error": "Invalid query by options length"}};
-    else if(opt_keys.indexOf("COLUMNS")<0||opt_keys.indexOf("ORDER")<0||opt_keys.indexOf("FORM")<0)
+    else if (opt_keys.indexOf("COLUMNS") < 0 || opt_keys.indexOf("FORM") < 0)
         return {code: 400, body: {"error": "Invalid query by option type"}};
-    else
-    {
+    else {
         let columns = options["COLUMNS"];
         let order = options["ORDER"];
         let form = options["FORM"];
-        if(form == null || form != "TABLE")
+        if (form == null || form != "TABLE")
             return {code: 400, body: {"error": "Invalid query: FORM"}};
-        for(let c of columns)
-        {
+        for (let c of columns) {
+            //console.log(c);
             let slices = c.split("_");
-            if(!fs.existsSync("./data/" + slices[0] + ".dat"))
-            {
-                if(missing.indexOf(slices[0])<0)
+            if (!fs.existsSync("./data/" + slices[0] + ".dat")) {
+                if (missing.indexOf(slices[0]) < 0)
                     missing.push(slices[0]);
             }
-            else
-            {
-                if(c_list.indexOf(c)<0)
-                {
+            else {
+                if (c_list.indexOf(c) < 0) {
                     c_list.push(c);
                 }
-                if(ids.indexOf(slices[0])<0)
-                {
+                if (ids.indexOf(slices[0]) < 0) {
                     ids.push(slices[0]);
                 }
             }
         }
-        if(order == null||clean_output_keys.indexOf(order)<0||c_list.indexOf(order)<0)
-        {
-            return {code: 400, body: {"error": "Invalid query: ORDER"}};
+        //console.log(c_list);
+        if (order != null) {
+            if (clean_output_keys.indexOf(order) < 0 || c_list.indexOf(order) < 0) {
+                return {code: 400, body: {"error": "Invalid query: ORDER"}};
+            }
+            else if (!fs.existsSync("./data/" + order.split("_")[0] + ".dat")) {
+                if (missing.indexOf(order.split("_")[0]) < 0)
+                    missing.push(order.split("_")[0]);
+            }
         }
-        else if(!fs.existsSync("./data/"+order.split("_")[0]+".dat"))
-        {
-            if(missing.indexOf(order.split("_")[0])<0)
-                missing.push(order.split("_")[0]);
-        }
-        if(c_list.length <= 0)
+
+        if (c_list.length <= 0)
             return {code: 400, body: {"error": "Invalid query: COLUMNS"}};
 
         return true;
     }
 }
-function validateWhere(where:any, missing:string[], c_list:string[]):any
-{
+function validateWhere(where: any, missing: string[], c_list: string[]): any {
     let where_keys = Object.keys(where);
-    for (let k in where_keys)
-    {
+    for (let k in where_keys) {
         switch (where_keys[k]) {
             case 'AND':
                 let h1_keys_and = Object.keys(where["AND"]);
@@ -433,17 +436,17 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                     else {
                                         for (let key in temp_keys) {
                                             let target: any;
-                                            let target_key:any;
-                                            let string:string;
+                                            let target_key: any;
+                                            let string: string;
                                             switch (temp_keys[key]) {
                                                 case 'LT':
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
                                                     string = target_key.toString();
-                                                    if(!fs.existsSync("./data/"+
-                                                            string.split("_")[0]+".dat"))
+                                                    if (!fs.existsSync("./data/" +
+                                                            string.split("_")[0] + ".dat"))
                                                         missing.push(string.split("_")[0]);
-                                                    if(typeof(target[string])!="number")
+                                                    if (typeof(target[string]) != "number")
                                                         return {
                                                             code: 400,
                                                             body: {"error": "Invalid LT"}
@@ -453,10 +456,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
                                                     string = target_key.toString();
-                                                    if(!fs.existsSync("./data/"+
-                                                            string.split("_")[0]+".dat"))
+                                                    if (!fs.existsSync("./data/" +
+                                                            string.split("_")[0] + ".dat"))
                                                         missing.push(string.split("_")[0]);
-                                                    if(typeof(target[string])!="number")
+                                                    if (typeof(target[string]) != "number")
                                                         return {
                                                             code: 400,
                                                             body: {"error": "Invalid GT"}
@@ -466,10 +469,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
                                                     string = target_key.toString();
-                                                    if(!fs.existsSync("./data/"+
-                                                            string.split("_")[0]+".dat"))
+                                                    if (!fs.existsSync("./data/" +
+                                                            string.split("_")[0] + ".dat"))
                                                         missing.push(string.split("_")[0]);
-                                                    if(typeof(target[string])!="number")
+                                                    if (typeof(target[string]) != "number")
                                                         return {
                                                             code: 400,
                                                             body: {"error": "Invalid EQ"}
@@ -479,27 +482,27 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
                                                     string = target_key.toString();
-                                                    if(!fs.existsSync("./data/"+
-                                                            string.split("_")[0]+".dat"))
+                                                    if (!fs.existsSync("./data/" +
+                                                            string.split("_")[0] + ".dat"))
                                                         missing.push(string.split("_")[0]);
-                                                    if(typeof(target[string])!="string")
+                                                    if (typeof(target[string]) != "string")
                                                         return {
                                                             code: 400,
                                                             body: {"error": "Invalid IS"}
                                                         };
-                                                    if(c_list.indexOf(string)<0)
-                                                        return {
-                                                            code: 400,
-                                                            body: {"error": "Invalid IS"}
-                                                        };
+                                                    /*if(c_list.indexOf(string)<0)
+                                                     return {
+                                                     code: 400,
+                                                     body: {"error": "Invalid IS"}
+                                                     };*/
                                                     break;
                                                 case 'NOT':
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
                                                     let rec = validateWhere(target, missing, c_list);
-                                                    if(rec!=true)
+                                                    if (rec != true)
                                                         return rec;
-                                                    if(target[target_key[0]].length == 1) {
+                                                    if (target[target_key[0]].length == 1) {
                                                         string = target_key.toString();
                                                         if (!fs.existsSync("./data/" +
                                                                 string.split("_")[0] + ".dat"))
@@ -517,17 +520,17 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                             }
                             else {
                                 let target: any;
-                                let target_key:any;
-                                let string:string;
+                                let target_key: any;
+                                let string: string;
                                 switch (s_keys[sk]) {
                                     case 'LT':
                                         target = h3;
                                         target_key = Object.keys(target);
                                         string = target_key.toString();
-                                        if(!fs.existsSync("./data/"+
-                                                string.split("_")[0]+".dat"))
+                                        if (!fs.existsSync("./data/" +
+                                                string.split("_")[0] + ".dat"))
                                             missing.push(string.split("_")[0]);
-                                        if(typeof(target[string])!="number")
+                                        if (typeof(target[string]) != "number")
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid LT"}
@@ -537,10 +540,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                         target = h3;
                                         target_key = Object.keys(target);
                                         string = target_key.toString();
-                                        if(!fs.existsSync("./data/"+
-                                                string.split("_")[0]+".dat"))
+                                        if (!fs.existsSync("./data/" +
+                                                string.split("_")[0] + ".dat"))
                                             missing.push(string.split("_")[0]);
-                                        if(typeof(target[string])!="number")
+                                        if (typeof(target[string]) != "number")
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid GT"}
@@ -550,10 +553,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                         target = h3;
                                         target_key = Object.keys(target);
                                         string = target_key.toString();
-                                        if(!fs.existsSync("./data/"+
-                                                string.split("_")[0]+".dat"))
+                                        if (!fs.existsSync("./data/" +
+                                                string.split("_")[0] + ".dat"))
                                             missing.push(string.split("_")[0]);
-                                        if(typeof(target[string])!="number")
+                                        if (typeof(target[string]) != "number")
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid EQ"}
@@ -563,15 +566,15 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                         target = h3;
                                         target_key = Object.keys(target);
                                         string = target_key.toString();
-                                        if(!fs.existsSync("./data/"+
-                                                string.split("_")[0]+".dat"))
+                                        if (!fs.existsSync("./data/" +
+                                                string.split("_")[0] + ".dat"))
                                             missing.push(string.split("_")[0]);
-                                        if(typeof(target[string])!="string")
+                                        if (typeof(target[string]) != "string")
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid IS"}
                                             };
-                                        if(c_list.indexOf(string)<0)
+                                        if (c_list.indexOf(string) < 0)
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid IS"}
@@ -581,10 +584,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                         target = h3;
                                         target_key = Object.keys(target);
                                         let rec = validateWhere(target, missing, c_list);
-                                        if(rec!=true)
+                                        if (rec != true)
                                             return rec;
                                         string = target_key.toString();
-                                        if(target[target_key[0]].length == 1) {
+                                        if (target[target_key[0]].length == 1) {
                                             string = target_key.toString();
                                             if (!fs.existsSync("./data/" +
                                                     string.split("_")[0] + ".dat"))
@@ -626,17 +629,17 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                     else {
                                         for (let key in temp_keys) {
                                             let target: any;
-                                            let target_key:any;
-                                            let string:string;
+                                            let target_key: any;
+                                            let string: string;
                                             switch (temp_keys[key]) {
                                                 case 'LT':
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
                                                     string = target_key.toString();
-                                                    if(!fs.existsSync("./data/"+
-                                                            string.split("_")[0]+".dat"))
+                                                    if (!fs.existsSync("./data/" +
+                                                            string.split("_")[0] + ".dat"))
                                                         missing.push(string.split("_")[0]);
-                                                    if(typeof(target[string])!="number")
+                                                    if (typeof(target[string]) != "number")
                                                         return {
                                                             code: 400,
                                                             body: {"error": "Invalid LT"}
@@ -646,10 +649,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
                                                     string = target_key.toString();
-                                                    if(!fs.existsSync("./data/"+
-                                                            string.split("_")[0]+".dat"))
+                                                    if (!fs.existsSync("./data/" +
+                                                            string.split("_")[0] + ".dat"))
                                                         missing.push(string.split("_")[0]);
-                                                    if(typeof(target[string])!="number")
+                                                    if (typeof(target[string]) != "number")
                                                         return {
                                                             code: 400,
                                                             body: {"error": "Invalid GT"}
@@ -659,10 +662,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
                                                     string = target_key.toString();
-                                                    if(!fs.existsSync("./data/"+
-                                                            string.split("_")[0]+".dat"))
+                                                    if (!fs.existsSync("./data/" +
+                                                            string.split("_")[0] + ".dat"))
                                                         missing.push(string.split("_")[0]);
-                                                    if(typeof(target[string])!="number")
+                                                    if (typeof(target[string]) != "number")
                                                         return {
                                                             code: 400,
                                                             body: {"error": "Invalid EQ"}
@@ -672,27 +675,27 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
                                                     string = target_key.toString();
-                                                    if(!fs.existsSync("./data/"+
-                                                            string.split("_")[0]+".dat"))
+                                                    if (!fs.existsSync("./data/" +
+                                                            string.split("_")[0] + ".dat"))
                                                         missing.push(string.split("_")[0]);
-                                                    if(typeof(target[string])!="string")
+                                                    if (typeof(target[string]) != "string")
                                                         return {
                                                             code: 400,
                                                             body: {"error": "Invalid IS"}
                                                         };
-                                                    if(c_list.indexOf(string)<0)
-                                                        return {
-                                                            code: 400,
-                                                            body: {"error": "Invalid IS"}
-                                                        };
+                                                    /*if(c_list.indexOf(string)<0)
+                                                     return {
+                                                     code: 400,
+                                                     body: {"error": "Invalid IS"}
+                                                     };*/
                                                     break;
                                                 case 'NOT':
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
                                                     let rec = validateWhere(target, missing, c_list);
-                                                    if(rec!=true)
+                                                    if (rec != true)
                                                         return rec;
-                                                    if(target[target_key[0]].length == 1) {
+                                                    if (target[target_key[0]].length == 1) {
                                                         string = target_key.toString();
                                                         if (!fs.existsSync("./data/" +
                                                                 string.split("_")[0] + ".dat"))
@@ -711,17 +714,17 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                             }
                             else {
                                 let target: any;
-                                let target_key:any;
-                                let string:string;
+                                let target_key: any;
+                                let string: string;
                                 switch (s_keys[sk]) {
                                     case 'LT':
                                         target = h3;
                                         target_key = Object.keys(target);
                                         string = target_key.toString();
-                                        if(!fs.existsSync("./data/"+
-                                                string.split("_")[0]+".dat"))
+                                        if (!fs.existsSync("./data/" +
+                                                string.split("_")[0] + ".dat"))
                                             missing.push(string.split("_")[0]);
-                                        if(typeof(target[string])!="number")
+                                        if (typeof(target[string]) != "number")
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid LT"}
@@ -731,10 +734,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                         target = h3;
                                         target_key = Object.keys(target);
                                         string = target_key.toString();
-                                        if(!fs.existsSync("./data/"+
-                                                string.split("_")[0]+".dat"))
+                                        if (!fs.existsSync("./data/" +
+                                                string.split("_")[0] + ".dat"))
                                             missing.push(string.split("_")[0]);
-                                        if(typeof(target[string])!="number")
+                                        if (typeof(target[string]) != "number")
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid GT"}
@@ -744,10 +747,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                         target = h3;
                                         target_key = Object.keys(target);
                                         string = target_key.toString();
-                                        if(!fs.existsSync("./data/"+
-                                                string.split("_")[0]+".dat"))
+                                        if (!fs.existsSync("./data/" +
+                                                string.split("_")[0] + ".dat"))
                                             missing.push(string.split("_")[0]);
-                                        if(typeof(target[string])!="number")
+                                        if (typeof(target[string]) != "number")
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid EQ"}
@@ -757,15 +760,15 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                         target = h3;
                                         target_key = Object.keys(target);
                                         string = target_key.toString();
-                                        if(!fs.existsSync("./data/"+
-                                                string.split("_")[0]+".dat"))
+                                        if (!fs.existsSync("./data/" +
+                                                string.split("_")[0] + ".dat"))
                                             missing.push(string.split("_")[0]);
-                                        if(typeof(target[string])!="string")
+                                        if (typeof(target[string]) != "string")
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid IS"}
                                             };
-                                        if(c_list.indexOf(string)<0)
+                                        if (c_list.indexOf(string) < 0)
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid IS"}
@@ -775,14 +778,14 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                         target = h3;
                                         target_key = Object.keys(target);
                                         let rec = validateWhere(target, missing, c_list);
-                                        if(rec!=true)
+                                        if (rec != true)
                                             return rec;
-                                        if(target_key.length != 1)
+                                        if (target_key.length != 1)
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid query: NOT should have only one condition"}
                                             };
-                                        if(target[target_key[0]].length == 1) {
+                                        if (target[target_key[0]].length == 1) {
                                             string = target_key.toString();
                                             if (!fs.existsSync("./data/" +
                                                     string.split("_")[0] + ".dat"))
@@ -808,14 +811,13 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                         code: 400,
                         body: {"error": "Invalid query: LT should have one condition"}
                     };
-                else
-                {
+                else {
                     let string = h1_keys_lt.toString();
                     //console.log(string);
-                    if(!fs.existsSync("./data/"+
-                            string.split("_")[0]+".dat"))
+                    if (!fs.existsSync("./data/" +
+                            string.split("_")[0] + ".dat"))
                         missing.push(where["LT"][string].split("_")[0]);
-                    else if(typeof(where["LT"][string])!="number")
+                    else if (typeof(where["LT"][string]) != "number")
                         return {
                             code: 400,
                             body: {"error": "Invalid LT"}
@@ -830,14 +832,13 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                         code: 400,
                         body: {"error": "Invalid query: GT should have one condition"}
                     };
-                else
-                {
+                else {
                     let string = h1_keys_gt.toString();
                     //console.log(string);
-                    if(!fs.existsSync("./data/"+
-                            string.split("_")[0]+".dat"))
+                    if (!fs.existsSync("./data/" +
+                            string.split("_")[0] + ".dat"))
                         missing.push(where["GT"][string].split("_")[0]);
-                    else if(typeof(where["GT"][string])!="number")
+                    else if (typeof(where["GT"][string]) != "number")
                         return {
                             code: 400,
                             body: {"error": "Invalid GT"}
@@ -852,14 +853,13 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                         code: 400,
                         body: {"error": "Invalid query: EQ should have one condition"}
                     };
-                else
-                {
+                else {
                     let string = h1_keys_eq.toString();
                     //console.log(string);
-                    if(!fs.existsSync("./data/"+
-                            string.split("_")[0]+".dat"))
+                    if (!fs.existsSync("./data/" +
+                            string.split("_")[0] + ".dat"))
                         missing.push(where["EQ"][string].split("_")[0]);
-                    else if(typeof(where["EQ"][string])!="number")
+                    else if (typeof(where["EQ"][string]) != "number")
                         return {
                             code: 400,
                             body: {"error": "Invalid EQ"}
@@ -874,18 +874,17 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                         code: 400,
                         body: {"error": "Invalid query: IS should have one condition"}
                     };
-                else
-                {
-                    let string = h1_keys_eq.toString();
-                    if(!fs.existsSync("./data/"+
-                            string.split("_")[0]+".dat"))
+                else {
+                    let string = h1_keys_is.toString();
+                    if (!fs.existsSync("./data/" +
+                            string.split("_")[0] + ".dat"))
                         missing.push(where["IS"][string].split("_")[0]);
-                    if(c_list.indexOf(string)<0)
+                    if (c_list.indexOf(string) < 0)
                         return {
                             code: 400,
                             body: {"error": "Invalid IS"}
                         };
-                    else if(typeof(where["IS"][string])!="string")
+                    else if (typeof(where["IS"][string]) != "string")
                         return {
                             code: 400,
                             body: {"error": "Invalid IS"}
@@ -900,37 +899,34 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                         code: 400,
                         body: {"error": "Invalid query: NOT should have only one condition"}
                     };
-                else if(h1_keys_not[0] == "AND"||h1_keys_not[0] == "OR")
-                {
+                else if (h1_keys_not[0] == "AND" || h1_keys_not[0] == "OR") {
                     let filter = where["NOT"][h1_keys_not[0]];
                     let filter_keys = Object.keys(filter);
-                    if(filter_keys.length < 1)
+                    if (filter_keys.length < 1)
                         return {
                             code: 400,
                             body: {"error": "Invalid query: OR should have at least one condition"}
                         };
-                    for (let f in filter_keys)
-                    {
+                    for (let f in filter_keys) {
                         let h = filter[filter_keys[f]];
                         let h_keys = Object.keys(h);
-                        if (h_keys.indexOf("AND") > -1 ||h_keys.indexOf("OR") > -1)
+                        if (h_keys.indexOf("AND") > -1 || h_keys.indexOf("OR") > -1)
                             return {
                                 code: 400,
-                                body: {"error": where["NOT"]+" should contain an array"}
+                                body: {"error": where["NOT"] + " should contain an array"}
                             };
                         let target: any;
-                        let target_key:any;
-                        let string:string;
-                        switch (h_keys[0])
-                        {
+                        let target_key: any;
+                        let string: string;
+                        switch (h_keys[0]) {
                             case 'LT':
                                 target = h[h_keys[0]];
                                 target_key = Object.keys(target);
                                 string = target_key.toString();
-                                if(!fs.existsSync("./data/"+
-                                        string.split("_")[0]+".dat"))
+                                if (!fs.existsSync("./data/" +
+                                        string.split("_")[0] + ".dat"))
                                     missing.push(string.split("_")[0]);
-                                if (typeof(target[string])!="number")
+                                if (typeof(target[string]) != "number")
                                     return {
                                         code: 400,
                                         body: {"error": "Invalid LT"}
@@ -940,10 +936,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                 target = h[h_keys[0]];
                                 target_key = Object.keys(target);
                                 string = target_key.toString();
-                                if(!fs.existsSync("./data/"+
-                                        string.split("_")[0]+".dat"))
+                                if (!fs.existsSync("./data/" +
+                                        string.split("_")[0] + ".dat"))
                                     missing.push(string.split("_")[0]);
-                                if (typeof(target[string])!="number")
+                                if (typeof(target[string]) != "number")
                                     return {
                                         code: 400,
                                         body: {"error": "Invalid GT"}
@@ -953,11 +949,11 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                 target = h[h_keys[0]];
                                 target_key = Object.keys(target);
                                 string = target_key.toString();
-                                if(!fs.existsSync("./data/"+
-                                        string.split("_")[0]+".dat"))
+                                if (!fs.existsSync("./data/" +
+                                        string.split("_")[0] + ".dat"))
                                     missing.push(string.split("_")[0]);
                                 //console.log(target[string]);
-                                if (typeof(target[string])!="number")
+                                if (typeof(target[string]) != "number")
                                     return {
                                         code: 400,
                                         body: {"error": "Invalid EQ"}
@@ -967,10 +963,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                 target = h[h_keys[0]];
                                 target_key = Object.keys(target);
                                 string = target_key.toString();
-                                if(!fs.existsSync("./data/"+
-                                        string.split("_")[0]+".dat"))
+                                if (!fs.existsSync("./data/" +
+                                        string.split("_")[0] + ".dat"))
                                     missing.push(string.split("_")[0]);
-                                if(c_list.indexOf(string)<0)
+                                if (c_list.indexOf(string) < 0)
                                     return {
                                         code: 400,
                                         body: {"error": "Invalid IS"}
@@ -985,9 +981,9 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                                 target = h[h_keys[0]];
                                 target_key = Object.keys(target);
                                 let rec = validateWhere(target, missing, c_list);
-                                if(rec!=true)
+                                if (rec != true)
                                     return rec;
-                                if(target[target_key[0]].length == 1) {
+                                if (target[target_key[0]].length == 1) {
                                     string = target_key.toString();
                                     if (!fs.existsSync("./data/" +
                                             string.split("_")[0] + ".dat"))
@@ -1002,21 +998,19 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
 
                     }
                 }
-                else
-                {
+                else {
                     let target: any;
-                    let target_key:any;
-                    let string:string;
-                    switch (h1_keys_not[0])
-                    {
+                    let target_key: any;
+                    let string: string;
+                    switch (h1_keys_not[0]) {
                         case 'LT':
                             target = where["NOT"][h1_keys_not[0]];
                             target_key = Object.keys(target);
                             string = target_key.toString();
-                            if(!fs.existsSync("./data/"+
-                                    string.split("_")[0]+".dat"))
+                            if (!fs.existsSync("./data/" +
+                                    string.split("_")[0] + ".dat"))
                                 missing.push(string.split("_")[0]);
-                            if(typeof(target[string])!="number")
+                            if (typeof(target[string]) != "number")
                                 return {
                                     code: 400,
                                     body: {"error": "Invalid LT"}
@@ -1026,10 +1020,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                             target = where["NOT"][h1_keys_not[0]];
                             target_key = Object.keys(target);
                             string = target_key.toString();
-                            if(!fs.existsSync("./data/"+
-                                    string.split("_")[0]+".dat"))
+                            if (!fs.existsSync("./data/" +
+                                    string.split("_")[0] + ".dat"))
                                 missing.push(string.split("_")[0]);
-                            if(typeof(target[string])!="number")
+                            if (typeof(target[string]) != "number")
                                 return {
                                     code: 400,
                                     body: {"error": "Invalid GT"}
@@ -1039,10 +1033,10 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                             target = where["NOT"][h1_keys_not[0]];
                             target_key = Object.keys(target);
                             string = target_key.toString();
-                            if(!fs.existsSync("./data/"+
-                                    string.split("_")[0]+".dat"))
+                            if (!fs.existsSync("./data/" +
+                                    string.split("_")[0] + ".dat"))
                                 missing.push(string.split("_")[0]);
-                            if(typeof(target[string])!="number")
+                            if (typeof(target[string]) != "number")
                                 return {
                                     code: 400,
                                     body: {"error": "Invalid EQ"}
@@ -1052,15 +1046,15 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                             target = where["NOT"][h1_keys_not[0]];
                             target_key = Object.keys(target);
                             string = target_key.toString();
-                            if(!fs.existsSync("./data/"+
-                                    string.split("_")[0]+".dat"))
+                            if (!fs.existsSync("./data/" +
+                                    string.split("_")[0] + ".dat"))
                                 missing.push(string.split("_")[0]);
-                            if(c_list.indexOf(string)<0)
+                            if (c_list.indexOf(string) < 0)
                                 return {
                                     code: 400,
                                     body: {"error": "Invalid IS"}
                                 };
-                            if(typeof(target[string])!="string")
+                            if (typeof(target[string]) != "string")
                                 return {
                                     code: 400,
                                     body: {"error": "Invalid IS"}
@@ -1070,12 +1064,15 @@ function validateWhere(where:any, missing:string[], c_list:string[]):any
                             target = where["NOT"][h1_keys_not[0]];
                             target_key = Object.keys(target);
                             let rec = validateWhere(target, missing, c_list);
-                            if(rec!=true)
+                            if (rec != true)
                                 return rec;
                             string = target_key.toString();
-                            if(!fs.existsSync("./data/"+
-                                    string.split("_")[0]+".dat"))
-                                missing.push(string.split("_")[0]);
+                            if (target.length == 1) {
+                                string = target_key.toString();
+                                if (!fs.existsSync("./data/" +
+                                        string.split("_")[0] + ".dat"))
+                                    missing.push(string.split("_")[0]);
+                            }
                             break;
                     }
                     if (target == null)
