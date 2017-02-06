@@ -1,3 +1,6 @@
+Test summary: 93% (49 passing, 4 failing, 0 skipped)
+Line coverage: 61%
+
 Mason Yang's contribution to code: Main focus is on addDataSet and removeDataSet features and 
 partly involved in debugging for performQuery.
 
