@@ -143,7 +143,7 @@ export default class InsightFacade implements IInsightFacade {
             }
             else
             {
-                response = validateWhere(query["WHERE"], missing);
+                response = validateWhere(query["WHERE"], missing, c_list);
                 //console.log(response);
                 if (missing.length > 0)
                 {
@@ -401,7 +401,7 @@ function validateOptions(options:any, missing:string[], c_list:string[], ids:str
         return true;
     }
 }
-function validateWhere(where:any, missing:string[])
+function validateWhere(where:any, missing:string[], c_list:string[])
 {
     let where_keys = Object.keys(where);
     for (let k in where_keys)
@@ -486,6 +486,11 @@ function validateWhere(where:any, missing:string[])
                                                             code: 400,
                                                             body: {"error": "Invalid IS"}
                                                         };
+                                                    if(c_list.indexOf(string)<0)
+                                                        return {
+                                                            code: 400,
+                                                            body: {"error": "Invalid IS"}
+                                                        };
                                                     break;
                                                 case 'NOT':
                                                     target = h3[hk][temp_keys[key]];
@@ -556,6 +561,11 @@ function validateWhere(where:any, missing:string[])
                                                 string.split("_")[0]+".dat"))
                                             missing.push(string.split("_")[0]);
                                         if(typeof(target[string])!="string")
+                                            return {
+                                                code: 400,
+                                                body: {"error": "Invalid IS"}
+                                            };
+                                        if(c_list.indexOf(string)<0)
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid IS"}
@@ -658,6 +668,11 @@ function validateWhere(where:any, missing:string[])
                                                             code: 400,
                                                             body: {"error": "Invalid IS"}
                                                         };
+                                                    if(c_list.indexOf(string)<0)
+                                                        return {
+                                                            code: 400,
+                                                            body: {"error": "Invalid IS"}
+                                                        };
                                                     break;
                                                 case 'NOT':
                                                     target = h3[hk][temp_keys[key]];
@@ -729,6 +744,11 @@ function validateWhere(where:any, missing:string[])
                                                 string.split("_")[0]+".dat"))
                                             missing.push(string.split("_")[0]);
                                         if(typeof(target[string])!="string")
+                                            return {
+                                                code: 400,
+                                                body: {"error": "Invalid IS"}
+                                            };
+                                        if(c_list.indexOf(string)<0)
                                             return {
                                                 code: 400,
                                                 body: {"error": "Invalid IS"}
@@ -833,6 +853,11 @@ function validateWhere(where:any, missing:string[])
                     if(!fs.existsSync("./data/"+
                             string.split("_")[0]+".dat"))
                         missing.push(where["IS"][string].split("_")[0]);
+                    if(c_list.indexOf(string)<0)
+                        return {
+                            code: 400,
+                            body: {"error": "Invalid IS"}
+                        };
                     else if(typeof(where["IS"][string])!="string")
                         return {
                             code: 400,
@@ -918,6 +943,11 @@ function validateWhere(where:any, missing:string[])
                                 if(!fs.existsSync("./data/"+
                                         string.split("_")[0]+".dat"))
                                     missing.push(string.split("_")[0]);
+                                if(c_list.indexOf(string)<0)
+                                    return {
+                                        code: 400,
+                                        body: {"error": "Invalid IS"}
+                                    };
                                 if (typeof(target[string]) != "string")
                                     return {
                                         code: 400,
@@ -993,6 +1023,11 @@ function validateWhere(where:any, missing:string[])
                             if(!fs.existsSync("./data/"+
                                     string.split("_")[0]+".dat"))
                                 missing.push(string.split("_")[0]);
+                            if(c_list.indexOf(string)<0)
+                                return {
+                                    code: 400,
+                                    body: {"error": "Invalid IS"}
+                                };
                             if(typeof(target[string])!="string")
                                 return {
                                     code: 400,
