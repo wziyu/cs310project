@@ -1,9 +1,7 @@
-/**
- * This is the main programmatic entry point for the project.
- */
 import {IInsightFacade, InsightResponse, QueryRequest} from "./IInsightFacade";
 
 import Log from "../Util"
+
 let JSZip = require("jszip");
 let fs = require("fs");
 
@@ -119,6 +117,7 @@ export default class InsightFacade implements IInsightFacade {
 
         return new Promise<InsightResponse>(function (resolve, reject) {
             //let query_json = JSON.parse(query.toString());
+
             let query_keys = Object.keys(query);
             //validate query
             if (query_keys.length < 2) {
@@ -131,7 +130,7 @@ export default class InsightFacade implements IInsightFacade {
             let missing:string[] = [];
             let c_list:string[] = [];
             let ids:string[] = [];
-            let response = validateOptions(query["OPTIONS"], missing, c_list, ids);
+            let response = validateOptions(JSON.parse(JSON.stringify(query))["OPTIONS"], missing, c_list, ids);
             //console.log(response);
             if(response!=true)
             {
@@ -143,7 +142,7 @@ export default class InsightFacade implements IInsightFacade {
             }
             else
             {
-                response = validateWhere(query["WHERE"], missing, c_list);
+                response = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list);
                 //console.log(response);
                 if (missing.length > 0)
                 {
@@ -160,14 +159,14 @@ export default class InsightFacade implements IInsightFacade {
 
 
 //dui
-            let where:any = query["WHERE"];
+            let where:any = JSON.parse(JSON.stringify(query))["WHERE"];
             var keys: any = Object.keys(where)[0];
             var filter: any = where[keys];
             let json= fs.readFileSync("./data/courses.dat").toString();
             let jonj=JSON.parse(json);
 
             var filtered_data: any = helper(keys, filter, jonj);
-            let column: any = query["OPTIONS"]["COLUMNS"];
+            let column: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["COLUMNS"];
             let retData: any[] = [];
 
             for (let v of filtered_data) {
@@ -178,7 +177,7 @@ export default class InsightFacade implements IInsightFacade {
                 retData.push(newEntry);
             }
 
-            let order: any = query["OPTIONS"]["ORDER"];
+            let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
             retData.sort(function (a: any, b: any) {
                 return a[order] - b[order];
             });
