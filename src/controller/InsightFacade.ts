@@ -1,7 +1,9 @@
+/**
+ * This is the main programmatic entry point for the project.
+ */
 import {IInsightFacade, InsightResponse, QueryRequest} from "./IInsightFacade";
 
 import Log from "../Util"
-
 let JSZip = require("jszip");
 let fs = require("fs");
 
@@ -400,7 +402,7 @@ function validateOptions(options:any, missing:string[], c_list:string[], ids:str
         return true;
     }
 }
-function validateWhere(where:any, missing:string[], c_list:string[])
+function validateWhere(where:any, missing:string[], c_list:string[]):any
 {
     let where_keys = Object.keys(where);
     for (let k in where_keys)
@@ -494,10 +496,15 @@ function validateWhere(where:any, missing:string[], c_list:string[])
                                                 case 'NOT':
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
-                                                    string = target_key.toString();
-                                                    if(!fs.existsSync("./data/"+
-                                                            string.split("_")[0]+".dat"))
-                                                        missing.push(string.split("_")[0]);
+                                                    let rec = validateWhere(target, missing, c_list);
+                                                    if(rec!=true)
+                                                        return rec;
+                                                    if(target[target_key[0]].length == 1) {
+                                                        string = target_key.toString();
+                                                        if (!fs.existsSync("./data/" +
+                                                                string.split("_")[0] + ".dat"))
+                                                            missing.push(string.split("_")[0]);
+                                                    }
                                                     break;
                                             }
                                             if (target == null)
@@ -573,10 +580,16 @@ function validateWhere(where:any, missing:string[], c_list:string[])
                                     case 'NOT':
                                         target = h3;
                                         target_key = Object.keys(target);
+                                        let rec = validateWhere(target, missing, c_list);
+                                        if(rec!=true)
+                                            return rec;
                                         string = target_key.toString();
-                                        if(!fs.existsSync("./data/"+
-                                                string.split("_")[0]+".dat"))
-                                            missing.push(string.split("_")[0]);
+                                        if(target[target_key[0]].length == 1) {
+                                            string = target_key.toString();
+                                            if (!fs.existsSync("./data/" +
+                                                    string.split("_")[0] + ".dat"))
+                                                missing.push(string.split("_")[0]);
+                                        }
                                         break;
                                 }
                                 if (target == null)
@@ -676,10 +689,15 @@ function validateWhere(where:any, missing:string[], c_list:string[])
                                                 case 'NOT':
                                                     target = h3[hk][temp_keys[key]];
                                                     target_key = Object.keys(target);
-                                                    string = target_key.toString();
-                                                    if(!fs.existsSync("./data/"+
-                                                            string.split("_")[0]+".dat"))
-                                                        missing.push(string.split("_")[0]);
+                                                    let rec = validateWhere(target, missing, c_list);
+                                                    if(rec!=true)
+                                                        return rec;
+                                                    if(target[target_key[0]].length == 1) {
+                                                        string = target_key.toString();
+                                                        if (!fs.existsSync("./data/" +
+                                                                string.split("_")[0] + ".dat"))
+                                                            missing.push(string.split("_")[0]);
+                                                    }
                                                     break;
                                             }
                                             //console.log(target);
@@ -756,10 +774,20 @@ function validateWhere(where:any, missing:string[], c_list:string[])
                                     case 'NOT':
                                         target = h3;
                                         target_key = Object.keys(target);
-                                        string = target_key.toString();
-                                        if(!fs.existsSync("./data/"+
-                                                string.split("_")[0]+".dat"))
-                                            missing.push(string.split("_")[0]);
+                                        let rec = validateWhere(target, missing, c_list);
+                                        if(rec!=true)
+                                            return rec;
+                                        if(target_key.length != 1)
+                                            return {
+                                                code: 400,
+                                                body: {"error": "Invalid query: NOT should have only one condition"}
+                                            };
+                                        if(target[target_key[0]].length == 1) {
+                                            string = target_key.toString();
+                                            if (!fs.existsSync("./data/" +
+                                                    string.split("_")[0] + ".dat"))
+                                                missing.push(string.split("_")[0]);
+                                        }
                                         break;
                                 }
                                 if (target == null)
@@ -956,10 +984,15 @@ function validateWhere(where:any, missing:string[], c_list:string[])
                             case 'NOT':
                                 target = h[h_keys[0]];
                                 target_key = Object.keys(target);
-                                string = target_key.toString();
-                                if(!fs.existsSync("./data/"+
-                                        string.split("_")[0]+".dat"))
-                                    missing.push(string.split("_")[0]);
+                                let rec = validateWhere(target, missing, c_list);
+                                if(rec!=true)
+                                    return rec;
+                                if(target[target_key[0]].length == 1) {
+                                    string = target_key.toString();
+                                    if (!fs.existsSync("./data/" +
+                                            string.split("_")[0] + ".dat"))
+                                        missing.push(string.split("_")[0]);
+                                }
                                 break;
                         }
                         //console.log(target);
@@ -1036,6 +1069,9 @@ function validateWhere(where:any, missing:string[], c_list:string[])
                         case 'NOT':
                             target = where["NOT"][h1_keys_not[0]];
                             target_key = Object.keys(target);
+                            let rec = validateWhere(target, missing, c_list);
+                            if(rec!=true)
+                                return rec;
                             string = target_key.toString();
                             if(!fs.existsSync("./data/"+
                                     string.split("_")[0]+".dat"))
