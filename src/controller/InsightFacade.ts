@@ -157,7 +157,12 @@ export default class InsightFacade implements IInsightFacade {
             let where: any = JSON.parse(JSON.stringify(query))["WHERE"];
             var keys: any = Object.keys(where)[0];
             var filter: any = where[keys];
-            let json = fs.readFileSync("./data/courses.dat").toString();
+            let json:any;
+            if(ids.length > 0)
+            {
+                if(fs.readFileSync("./data/"+ ids[0] + ".dat"))
+                    json = fs.readFileSync("./data/"+ ids[0] + ".dat").toString();
+            }
             let jonj = JSON.parse(json);
 
             var filtered_data: any = helper(keys, filter, jonj);
@@ -408,6 +413,18 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
 function validateWhere(target: any, missing: string[], c_list: string[]): any {
     let where_keys = Object.keys(target);
     let return_list = [];
+    let clean_output_keys =
+        [
+            'dept',
+            'id',
+            'avg',
+            'instructor',
+            'title',
+            'pass',
+            'fail',
+            'audit',
+            'uuid'
+        ];
     for (let k in where_keys)
     {
         let key_string:string;
@@ -434,7 +451,6 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                 }
                 break;
             case 'GT':
-                //console.log(target[where_keys[k]]);
                 key_string = Object.keys(target[where_keys[k]]).toString();
                 if (key_string!= "" && !fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
                 {
@@ -443,7 +459,7 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                     if(missing.length>0)
                         return true;
                 }
-                if(typeof(target[where_keys[k]][key_string])!="number")
+                if(typeof(target[where_keys[k]][key_string])!="number" || clean_output_keys.indexOf(key_string.split("_")[1])<0)
                     return {
                         code: 400,
                         body: {"error": "Invalid GT"}
@@ -451,7 +467,6 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
 
                 break;
             case 'LT':
-                //console.log(target[where_keys[k]]);
                 key_string = Object.keys(target[where_keys[k]]).toString();
                 if (key_string!= "" && !fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
                 {
@@ -460,15 +475,15 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                     if(missing.length>0)
                         return true;
                 }
-                if(typeof(target[where_keys[k]][key_string])!="number")
+                if(typeof(target[where_keys[k]][key_string])!="number" || clean_output_keys.indexOf(key_string.split("_")[1])<0)
                     return {
                         code: 400,
                         body: {"error": "Invalid LT"}
                     };
                 break;
             case 'EQ':
-                //console.log(target[where_keys[k]]);
                 key_string = Object.keys(target[where_keys[k]]).toString();
+                console.log(clean_output_keys.indexOf(key_string.split("_")[1]));
                 if (key_string!= "" && !fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
                 {
                     if(missing.indexOf(key_string.split("_")[0])<0)
@@ -476,14 +491,13 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                     if(missing.length>0)
                         return true;
                 }
-                if(typeof(target[where_keys[k]][key_string])!="number")
+                if(typeof(target[where_keys[k]][key_string])!="number" || clean_output_keys.indexOf(key_string.split("_")[1])<0)
                     return {
                         code: 400,
                         body: {"error": "Invalid EQ"}
                     };
                 break;
             case 'IS':
-                //console.log(target[where_keys[k]]);
                 key_string = Object.keys(target[where_keys[k]]).toString();
                 if (key_string!= "" && !fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
                 {
@@ -497,7 +511,7 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                         code: 400,
                         body: {"error": "Invalid IS"}
                     };
-                else if(typeof(target[where_keys[k]][key_string])!="string")
+                else if(typeof(target[where_keys[k]][key_string])!="string" || clean_output_keys.indexOf(key_string.split("_")[1])<0)
                     return {
                         code: 400,
                         body: {"error": "Invalid IS"}
