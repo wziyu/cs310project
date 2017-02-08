@@ -1,6 +1,4 @@
-/**
- * This is the main programmatic entry point for the project.
- */
+
 import {IInsightFacade, InsightResponse, QueryRequest} from "./IInsightFacade";
 
 import Log from "../Util"
@@ -409,7 +407,7 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
 }
 function validateWhere(target: any, missing: string[], c_list: string[]): any {
     let where_keys = Object.keys(target);
-    //console.log(typeof(target));
+    let return_list = [];
     for (let k in where_keys)
     {
         let key_string:string;
@@ -422,7 +420,7 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                 {
                     let local_res = validateWhere(t, missing, c_list);
                     if(local_res != true)
-                        return local_res;
+                        return_list.push(local_res);
                 }
                 break;
             case 'OR':
@@ -432,16 +430,18 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                 {
                     let local_res = validateWhere(t, missing, c_list);
                     if(local_res != true)
-                        return local_res;
+                        return_list.push(local_res);
                 }
                 break;
             case 'GT':
                 //console.log(target[where_keys[k]]);
                 key_string = Object.keys(target[where_keys[k]]).toString();
-                if (!fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
+                if (key_string!= "" && !fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
                 {
                     if(missing.indexOf(key_string.split("_")[0])<0)
                         missing.push(key_string.split("_")[0]);
+                    if(missing.length>0)
+                        return true;
                 }
                 if(typeof(target[where_keys[k]][key_string])!="number")
                     return {
@@ -453,10 +453,12 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
             case 'LT':
                 //console.log(target[where_keys[k]]);
                 key_string = Object.keys(target[where_keys[k]]).toString();
-                if (!fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
+                if (key_string!= "" && !fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
                 {
                     if(missing.indexOf(key_string.split("_")[0])<0)
                         missing.push(key_string.split("_")[0]);
+                    if(missing.length>0)
+                        return true;
                 }
                 if(typeof(target[where_keys[k]][key_string])!="number")
                     return {
@@ -467,10 +469,12 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
             case 'EQ':
                 //console.log(target[where_keys[k]]);
                 key_string = Object.keys(target[where_keys[k]]).toString();
-                if (!fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
+                if (key_string!= "" && !fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
                 {
                     if(missing.indexOf(key_string.split("_")[0])<0)
                         missing.push(key_string.split("_")[0]);
+                    if(missing.length>0)
+                        return true;
                 }
                 if(typeof(target[where_keys[k]][key_string])!="number")
                     return {
@@ -481,10 +485,12 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
             case 'IS':
                 //console.log(target[where_keys[k]]);
                 key_string = Object.keys(target[where_keys[k]]).toString();
-                if (!fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
+                if (key_string!= "" && !fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
                 {
                     if(missing.indexOf(key_string.split("_")[0])<0)
                         missing.push(key_string.split("_")[0]);
+                    if(missing.length>0)
+                        return true;
                 }
                 if (c_list.indexOf(key_string) < 0)
                     return {
@@ -506,9 +512,13 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                     return local_res;
                 break;
             default:
-                console.log(where_keys[k]);
-                break;
+                //console.log(where_keys[k]);
+                return {code:400, body:{"error": "Invalid query"}};
+
         }
     }
-    return true;
+    if(return_list.length<1)
+        return true;
+    else
+        return return_list[0];
 }
