@@ -407,681 +407,107 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
         return true;
     }
 }
-function validateWhere(where: any, missing: string[], c_list: string[]): any {
-    let where_keys = Object.keys(where);
-    for (let k in where_keys) {
-        switch (where_keys[k]) {
+function validateWhere(target: any, missing: string[], c_list: string[]): any {
+    let where_keys = Object.keys(target);
+    //console.log(typeof(target));
+    for (let k in where_keys)
+    {
+        let key_string:string;
+        switch (where_keys[k])
+        {
             case 'AND':
-                let h1_keys_and = Object.keys(where["AND"]);
-                if (h1_keys_and.length < 1)
-                    return {
-                        code: 400,
-                        body: {"error": "Invalid query: AND should have at least one condition"}
-                    };
-                else {
-                    for (let k in h1_keys_and) {
-                        let s = where["AND"][k];
-                        let s_keys = Object.keys(s);
-                        for (let sk in s_keys) {
-                            let h3 = s[s_keys[sk]];
-                            if (s_keys[sk] == "AND" || s_keys[sk] == "OR") {
-                                let h3_keys = Object.keys(h3);
-                                for (let hk in h3_keys) {
-                                    let temp_keys = Object.keys(h3[hk]);
-                                    if (temp_keys.indexOf("AND") > -1 || temp_keys.indexOf("OR") > -1)
-                                        return {
-                                            code: 400,
-                                            body: {"error": "OR should contain an array"}
-                                        };
-                                    else {
-                                        for (let key in temp_keys) {
-                                            let target: any;
-                                            let target_key: any;
-                                            let string: string;
-                                            switch (temp_keys[key]) {
-                                                case 'LT':
-                                                    target = h3[hk][temp_keys[key]];
-                                                    target_key = Object.keys(target);
-                                                    string = target_key.toString();
-                                                    if (!fs.existsSync("./data/" +
-                                                            string.split("_")[0] + ".dat"))
-                                                        missing.push(string.split("_")[0]);
-                                                    if (typeof(target[string]) != "number")
-                                                        return {
-                                                            code: 400,
-                                                            body: {"error": "Invalid LT"}
-                                                        };
-                                                    break;
-                                                case 'GT':
-                                                    target = h3[hk][temp_keys[key]];
-                                                    target_key = Object.keys(target);
-                                                    string = target_key.toString();
-                                                    if (!fs.existsSync("./data/" +
-                                                            string.split("_")[0] + ".dat"))
-                                                        missing.push(string.split("_")[0]);
-                                                    if (typeof(target[string]) != "number")
-                                                        return {
-                                                            code: 400,
-                                                            body: {"error": "Invalid GT"}
-                                                        };
-                                                    break;
-                                                case 'EQ':
-                                                    target = h3[hk][temp_keys[key]];
-                                                    target_key = Object.keys(target);
-                                                    string = target_key.toString();
-                                                    if (!fs.existsSync("./data/" +
-                                                            string.split("_")[0] + ".dat"))
-                                                        missing.push(string.split("_")[0]);
-                                                    if (typeof(target[string]) != "number")
-                                                        return {
-                                                            code: 400,
-                                                            body: {"error": "Invalid EQ"}
-                                                        };
-                                                    break;
-                                                case 'IS':
-                                                    target = h3[hk][temp_keys[key]];
-                                                    target_key = Object.keys(target);
-                                                    string = target_key.toString();
-                                                    if (!fs.existsSync("./data/" +
-                                                            string.split("_")[0] + ".dat"))
-                                                        missing.push(string.split("_")[0]);
-                                                    if (typeof(target[string]) != "string")
-                                                        return {
-                                                            code: 400,
-                                                            body: {"error": "Invalid IS"}
-                                                        };
-                                                    /*if(c_list.indexOf(string)<0)
-                                                     return {
-                                                     code: 400,
-                                                     body: {"error": "Invalid IS"}
-                                                     };*/
-                                                    break;
-                                                case 'NOT':
-                                                    target = h3[hk][temp_keys[key]];
-                                                    target_key = Object.keys(target);
-                                                    let rec = validateWhere(target, missing, c_list);
-                                                    if (rec != true)
-                                                        return rec;
-                                                    if (target[target_key[0]].length == 1) {
-                                                        string = target_key.toString();
-                                                        if (!fs.existsSync("./data/" +
-                                                                string.split("_")[0] + ".dat"))
-                                                            missing.push(string.split("_")[0]);
-                                                    }
-                                                    break;
-                                            }
-                                            if (target == null)
-                                                return {code: 400, body: {"error": "Invalid query: key1"}};
-                                            //console.log(string);
-                                        }
-                                    }
-
-                                }
-                            }
-                            else {
-                                let target: any;
-                                let target_key: any;
-                                let string: string;
-                                switch (s_keys[sk]) {
-                                    case 'LT':
-                                        target = h3;
-                                        target_key = Object.keys(target);
-                                        string = target_key.toString();
-                                        if (!fs.existsSync("./data/" +
-                                                string.split("_")[0] + ".dat"))
-                                            missing.push(string.split("_")[0]);
-                                        if (typeof(target[string]) != "number")
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid LT"}
-                                            };
-                                        break;
-                                    case 'GT':
-                                        target = h3;
-                                        target_key = Object.keys(target);
-                                        string = target_key.toString();
-                                        if (!fs.existsSync("./data/" +
-                                                string.split("_")[0] + ".dat"))
-                                            missing.push(string.split("_")[0]);
-                                        if (typeof(target[string]) != "number")
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid GT"}
-                                            };
-                                        break;
-                                    case 'EQ':
-                                        target = h3;
-                                        target_key = Object.keys(target);
-                                        string = target_key.toString();
-                                        if (!fs.existsSync("./data/" +
-                                                string.split("_")[0] + ".dat"))
-                                            missing.push(string.split("_")[0]);
-                                        if (typeof(target[string]) != "number")
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid EQ"}
-                                            };
-                                        break;
-                                    case 'IS':
-                                        target = h3;
-                                        target_key = Object.keys(target);
-                                        string = target_key.toString();
-                                        if (!fs.existsSync("./data/" +
-                                                string.split("_")[0] + ".dat"))
-                                            missing.push(string.split("_")[0]);
-                                        if (typeof(target[string]) != "string")
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid IS"}
-                                            };
-                                        if (c_list.indexOf(string) < 0)
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid IS"}
-                                            };
-                                        break;
-                                    case 'NOT':
-                                        target = h3;
-                                        target_key = Object.keys(target);
-                                        let rec = validateWhere(target, missing, c_list);
-                                        if (rec != true)
-                                            return rec;
-                                        string = target_key.toString();
-                                        if (target[target_key[0]].length == 1) {
-                                            string = target_key.toString();
-                                            if (!fs.existsSync("./data/" +
-                                                    string.split("_")[0] + ".dat"))
-                                                missing.push(string.split("_")[0]);
-                                        }
-                                        break;
-                                }
-                                if (target == null)
-                                    return {code: 400, body: {"error": "Invalid query: key2"}};
-                                //console.log(string);
-
-                            }
-                        }
-                    }
+                if(target[where_keys[k]].length<1)
+                    return {code:400, body:{"error": "AND should have at least one filter"}};
+                for(let t of target[where_keys[k]])
+                {
+                    let local_res = validateWhere(t, missing, c_list);
+                    if(local_res != true)
+                        return local_res;
                 }
                 break;
             case 'OR':
-                let h1_keys_or = Object.keys(where["OR"]);
-                if (h1_keys_or.length < 1)
+                if(target[where_keys[k]].length<1)
+                    return {code:400, body:{"error": "OR should have at least one filter"}};
+                for(let t of target[where_keys[k]])
+                {
+                    let local_res = validateWhere(t, missing, c_list);
+                    if(local_res != true)
+                        return local_res;
+                }
+                break;
+            case 'GT':
+                //console.log(target[where_keys[k]]);
+                key_string = Object.keys(target[where_keys[k]]).toString();
+                if (!fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
+                {
+                    if(missing.indexOf(key_string.split("_")[0])<0)
+                        missing.push(key_string.split("_")[0]);
+                }
+                if(typeof(target[where_keys[k]][key_string])!="number")
                     return {
                         code: 400,
-                        body: {"error": "Invalid query: OR should have at least one condition"}
+                        body: {"error": "Invalid GT"}
                     };
-                else {
-                    for (let k in h1_keys_or) {
-                        let s = where["OR"][k];
-                        let s_keys = Object.keys(s);
-                        for (let sk in s_keys) {
-                            let h3 = s[s_keys[sk]];
-                            if (s_keys[sk] == "AND" || s_keys[sk] == "OR") {
-                                let h3_keys = Object.keys(h3);
-                                for (let hk in h3_keys) {
-                                    let temp_keys = Object.keys(h3[hk]);
-                                    if (temp_keys.indexOf("AND") > -1 || temp_keys.indexOf("OR") > -1)
-                                        return {
-                                            code: 400,
-                                            body: {"error": "OR should contain an array"}
-                                        };
-                                    else {
-                                        for (let key in temp_keys) {
-                                            let target: any;
-                                            let target_key: any;
-                                            let string: string;
-                                            switch (temp_keys[key]) {
-                                                case 'LT':
-                                                    target = h3[hk][temp_keys[key]];
-                                                    target_key = Object.keys(target);
-                                                    string = target_key.toString();
-                                                    if (!fs.existsSync("./data/" +
-                                                            string.split("_")[0] + ".dat"))
-                                                        missing.push(string.split("_")[0]);
-                                                    if (typeof(target[string]) != "number")
-                                                        return {
-                                                            code: 400,
-                                                            body: {"error": "Invalid LT"}
-                                                        };
-                                                    break;
-                                                case 'GT':
-                                                    target = h3[hk][temp_keys[key]];
-                                                    target_key = Object.keys(target);
-                                                    string = target_key.toString();
-                                                    if (!fs.existsSync("./data/" +
-                                                            string.split("_")[0] + ".dat"))
-                                                        missing.push(string.split("_")[0]);
-                                                    if (typeof(target[string]) != "number")
-                                                        return {
-                                                            code: 400,
-                                                            body: {"error": "Invalid GT"}
-                                                        };
-                                                    break;
-                                                case 'EQ':
-                                                    target = h3[hk][temp_keys[key]];
-                                                    target_key = Object.keys(target);
-                                                    string = target_key.toString();
-                                                    if (!fs.existsSync("./data/" +
-                                                            string.split("_")[0] + ".dat"))
-                                                        missing.push(string.split("_")[0]);
-                                                    if (typeof(target[string]) != "number")
-                                                        return {
-                                                            code: 400,
-                                                            body: {"error": "Invalid EQ"}
-                                                        };
-                                                    break;
-                                                case 'IS':
-                                                    target = h3[hk][temp_keys[key]];
-                                                    target_key = Object.keys(target);
-                                                    string = target_key.toString();
-                                                    if (!fs.existsSync("./data/" +
-                                                            string.split("_")[0] + ".dat"))
-                                                        missing.push(string.split("_")[0]);
-                                                    if (typeof(target[string]) != "string")
-                                                        return {
-                                                            code: 400,
-                                                            body: {"error": "Invalid IS"}
-                                                        };
-                                                    /*if(c_list.indexOf(string)<0)
-                                                     return {
-                                                     code: 400,
-                                                     body: {"error": "Invalid IS"}
-                                                     };*/
-                                                    break;
-                                                case 'NOT':
-                                                    target = h3[hk][temp_keys[key]];
-                                                    target_key = Object.keys(target);
-                                                    let rec = validateWhere(target, missing, c_list);
-                                                    if (rec != true)
-                                                        return rec;
-                                                    if (target[target_key[0]].length == 1) {
-                                                        string = target_key.toString();
-                                                        if (!fs.existsSync("./data/" +
-                                                                string.split("_")[0] + ".dat"))
-                                                            missing.push(string.split("_")[0]);
-                                                    }
-                                                    break;
-                                            }
-                                            //console.log(target);
-                                            if (target == null)
-                                                return {code: 400, body: {"error": "Invalid query: key3"}};
-                                            //console.log(string);
-                                        }
-                                    }
 
-                                }
-                            }
-                            else {
-                                let target: any;
-                                let target_key: any;
-                                let string: string;
-                                switch (s_keys[sk]) {
-                                    case 'LT':
-                                        target = h3;
-                                        target_key = Object.keys(target);
-                                        string = target_key.toString();
-                                        if (!fs.existsSync("./data/" +
-                                                string.split("_")[0] + ".dat"))
-                                            missing.push(string.split("_")[0]);
-                                        if (typeof(target[string]) != "number")
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid LT"}
-                                            };
-                                        break;
-                                    case 'GT':
-                                        target = h3;
-                                        target_key = Object.keys(target);
-                                        string = target_key.toString();
-                                        if (!fs.existsSync("./data/" +
-                                                string.split("_")[0] + ".dat"))
-                                            missing.push(string.split("_")[0]);
-                                        if (typeof(target[string]) != "number")
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid GT"}
-                                            };
-                                        break;
-                                    case 'EQ':
-                                        target = h3;
-                                        target_key = Object.keys(target);
-                                        string = target_key.toString();
-                                        if (!fs.existsSync("./data/" +
-                                                string.split("_")[0] + ".dat"))
-                                            missing.push(string.split("_")[0]);
-                                        if (typeof(target[string]) != "number")
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid EQ"}
-                                            };
-                                        break;
-                                    case 'IS':
-                                        target = h3;
-                                        target_key = Object.keys(target);
-                                        string = target_key.toString();
-                                        if (!fs.existsSync("./data/" +
-                                                string.split("_")[0] + ".dat"))
-                                            missing.push(string.split("_")[0]);
-                                        if (typeof(target[string]) != "string")
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid IS"}
-                                            };
-                                        if (c_list.indexOf(string) < 0)
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid IS"}
-                                            };
-                                        break;
-                                    case 'NOT':
-                                        target = h3;
-                                        target_key = Object.keys(target);
-                                        let rec = validateWhere(target, missing, c_list);
-                                        if (rec != true)
-                                            return rec;
-                                        if (target_key.length != 1)
-                                            return {
-                                                code: 400,
-                                                body: {"error": "Invalid query: NOT should have only one condition"}
-                                            };
-                                        if (target[target_key[0]].length == 1) {
-                                            string = target_key.toString();
-                                            if (!fs.existsSync("./data/" +
-                                                    string.split("_")[0] + ".dat"))
-                                                missing.push(string.split("_")[0]);
-                                        }
-                                        break;
-                                }
-                                if (target == null)
-                                    return {code: 400, body: {"error": "Invalid query: key4"}};
-                                //console.log(string);
-
-                            }
-
-                        }
-                    }
-                }
                 break;
-            case
-            "LT":
-                let h1_keys_lt = Object.keys(where["LT"]);
-                if (h1_keys_lt.length != 1)
+            case 'LT':
+                //console.log(target[where_keys[k]]);
+                key_string = Object.keys(target[where_keys[k]]).toString();
+                if (!fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
+                {
+                    if(missing.indexOf(key_string.split("_")[0])<0)
+                        missing.push(key_string.split("_")[0]);
+                }
+                if(typeof(target[where_keys[k]][key_string])!="number")
                     return {
                         code: 400,
-                        body: {"error": "Invalid query: LT should have one condition"}
+                        body: {"error": "Invalid LT"}
                     };
-                else {
-                    let string = h1_keys_lt.toString();
-                    //console.log(string);
-                    if (!fs.existsSync("./data/" +
-                            string.split("_")[0] + ".dat"))
-                        missing.push(where["LT"][string].split("_")[0]);
-                    else if (typeof(where["LT"][string]) != "number")
-                        return {
-                            code: 400,
-                            body: {"error": "Invalid LT"}
-                        };
-                }
                 break;
-            case
-            "GT":
-                let h1_keys_gt = Object.keys(where["GT"]);
-                if (h1_keys_gt.length != 1)
+            case 'EQ':
+                //console.log(target[where_keys[k]]);
+                key_string = Object.keys(target[where_keys[k]]).toString();
+                if (!fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
+                {
+                    if(missing.indexOf(key_string.split("_")[0])<0)
+                        missing.push(key_string.split("_")[0]);
+                }
+                if(typeof(target[where_keys[k]][key_string])!="number")
                     return {
                         code: 400,
-                        body: {"error": "Invalid query: GT should have one condition"}
+                        body: {"error": "Invalid EQ"}
                     };
-                else {
-                    let string = h1_keys_gt.toString();
-                    //console.log(string);
-                    if (!fs.existsSync("./data/" +
-                            string.split("_")[0] + ".dat"))
-                        missing.push(where["GT"][string].split("_")[0]);
-                    else if (typeof(where["GT"][string]) != "number")
-                        return {
-                            code: 400,
-                            body: {"error": "Invalid GT"}
-                        };
-                }
                 break;
-            case
-            "EQ":
-                let h1_keys_eq = Object.keys(where["EQ"]);
-                if (h1_keys_eq.length != 1)
+            case 'IS':
+                //console.log(target[where_keys[k]]);
+                key_string = Object.keys(target[where_keys[k]]).toString();
+                if (!fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
+                {
+                    if(missing.indexOf(key_string.split("_")[0])<0)
+                        missing.push(key_string.split("_")[0]);
+                }
+                if (c_list.indexOf(key_string) < 0)
                     return {
                         code: 400,
-                        body: {"error": "Invalid query: EQ should have one condition"}
+                        body: {"error": "Invalid IS"}
                     };
-                else {
-                    let string = h1_keys_eq.toString();
-                    //console.log(string);
-                    if (!fs.existsSync("./data/" +
-                            string.split("_")[0] + ".dat"))
-                        missing.push(where["EQ"][string].split("_")[0]);
-                    else if (typeof(where["EQ"][string]) != "number")
-                        return {
-                            code: 400,
-                            body: {"error": "Invalid EQ"}
-                        };
-                }
-                break;
-            case
-            "IS":
-                let h1_keys_is = Object.keys(where["IS"]);
-                if (h1_keys_is.length != 1)
+                else if(typeof(target[where_keys[k]][key_string])!="string")
                     return {
                         code: 400,
-                        body: {"error": "Invalid query: IS should have one condition"}
+                        body: {"error": "Invalid IS"}
                     };
-                else {
-                    let string = h1_keys_is.toString();
-                    if (!fs.existsSync("./data/" +
-                            string.split("_")[0] + ".dat"))
-                        missing.push(where["IS"][string].split("_")[0]);
-                    if (c_list.indexOf(string) < 0)
-                        return {
-                            code: 400,
-                            body: {"error": "Invalid IS"}
-                        };
-                    else if (typeof(where["IS"][string]) != "string")
-                        return {
-                            code: 400,
-                            body: {"error": "Invalid IS"}
-                        };
-                }
                 break;
-            case
-            "NOT":
-                let h1_keys_not = Object.keys(where["NOT"]);
-                if (h1_keys_not.length != 1)
-                    return {
-                        code: 400,
-                        body: {"error": "Invalid query: NOT should have only one condition"}
-                    };
-                else if (h1_keys_not[0] == "AND" || h1_keys_not[0] == "OR") {
-                    let filter = where["NOT"][h1_keys_not[0]];
-                    let filter_keys = Object.keys(filter);
-                    if (filter_keys.length < 1)
-                        return {
-                            code: 400,
-                            body: {"error": "Invalid query: OR should have at least one condition"}
-                        };
-                    for (let f in filter_keys) {
-                        let h = filter[filter_keys[f]];
-                        let h_keys = Object.keys(h);
-                        if (h_keys.indexOf("AND") > -1 || h_keys.indexOf("OR") > -1)
-                            return {
-                                code: 400,
-                                body: {"error": where["NOT"] + " should contain an array"}
-                            };
-                        let target: any;
-                        let target_key: any;
-                        let string: string;
-                        switch (h_keys[0]) {
-                            case 'LT':
-                                target = h[h_keys[0]];
-                                target_key = Object.keys(target);
-                                string = target_key.toString();
-                                if (!fs.existsSync("./data/" +
-                                        string.split("_")[0] + ".dat"))
-                                    missing.push(string.split("_")[0]);
-                                if (typeof(target[string]) != "number")
-                                    return {
-                                        code: 400,
-                                        body: {"error": "Invalid LT"}
-                                    };
-                                break;
-                            case 'GT':
-                                target = h[h_keys[0]];
-                                target_key = Object.keys(target);
-                                string = target_key.toString();
-                                if (!fs.existsSync("./data/" +
-                                        string.split("_")[0] + ".dat"))
-                                    missing.push(string.split("_")[0]);
-                                if (typeof(target[string]) != "number")
-                                    return {
-                                        code: 400,
-                                        body: {"error": "Invalid GT"}
-                                    };
-                                break;
-                            case 'EQ':
-                                target = h[h_keys[0]];
-                                target_key = Object.keys(target);
-                                string = target_key.toString();
-                                if (!fs.existsSync("./data/" +
-                                        string.split("_")[0] + ".dat"))
-                                    missing.push(string.split("_")[0]);
-                                //console.log(target[string]);
-                                if (typeof(target[string]) != "number")
-                                    return {
-                                        code: 400,
-                                        body: {"error": "Invalid EQ"}
-                                    };
-                                break;
-                            case 'IS':
-                                target = h[h_keys[0]];
-                                target_key = Object.keys(target);
-                                string = target_key.toString();
-                                if (!fs.existsSync("./data/" +
-                                        string.split("_")[0] + ".dat"))
-                                    missing.push(string.split("_")[0]);
-                                if (c_list.indexOf(string) < 0)
-                                    return {
-                                        code: 400,
-                                        body: {"error": "Invalid IS"}
-                                    };
-                                if (typeof(target[string]) != "string")
-                                    return {
-                                        code: 400,
-                                        body: {"error": "Invalid IS"}
-                                    };
-                                break;
-                            case 'NOT':
-                                target = h[h_keys[0]];
-                                target_key = Object.keys(target);
-                                let rec = validateWhere(target, missing, c_list);
-                                if (rec != true)
-                                    return rec;
-                                if (target[target_key[0]].length == 1) {
-                                    string = target_key.toString();
-                                    if (!fs.existsSync("./data/" +
-                                            string.split("_")[0] + ".dat"))
-                                        missing.push(string.split("_")[0]);
-                                }
-                                break;
-                        }
-                        //console.log(target);
-                        if (target == null)
-                            return {code: 400, body: {"error": "Invalid query: key5"}};
-                        //console.log(string);
-
-                    }
-                }
-                else {
-                    let target: any;
-                    let target_key: any;
-                    let string: string;
-                    switch (h1_keys_not[0]) {
-                        case 'LT':
-                            target = where["NOT"][h1_keys_not[0]];
-                            target_key = Object.keys(target);
-                            string = target_key.toString();
-                            if (!fs.existsSync("./data/" +
-                                    string.split("_")[0] + ".dat"))
-                                missing.push(string.split("_")[0]);
-                            if (typeof(target[string]) != "number")
-                                return {
-                                    code: 400,
-                                    body: {"error": "Invalid LT"}
-                                };
-                            break;
-                        case 'GT':
-                            target = where["NOT"][h1_keys_not[0]];
-                            target_key = Object.keys(target);
-                            string = target_key.toString();
-                            if (!fs.existsSync("./data/" +
-                                    string.split("_")[0] + ".dat"))
-                                missing.push(string.split("_")[0]);
-                            if (typeof(target[string]) != "number")
-                                return {
-                                    code: 400,
-                                    body: {"error": "Invalid GT"}
-                                };
-                            break;
-                        case 'EQ':
-                            target = where["NOT"][h1_keys_not[0]];
-                            target_key = Object.keys(target);
-                            string = target_key.toString();
-                            if (!fs.existsSync("./data/" +
-                                    string.split("_")[0] + ".dat"))
-                                missing.push(string.split("_")[0]);
-                            if (typeof(target[string]) != "number")
-                                return {
-                                    code: 400,
-                                    body: {"error": "Invalid EQ"}
-                                };
-                            break;
-                        case 'IS':
-                            target = where["NOT"][h1_keys_not[0]];
-                            target_key = Object.keys(target);
-                            string = target_key.toString();
-                            if (!fs.existsSync("./data/" +
-                                    string.split("_")[0] + ".dat"))
-                                missing.push(string.split("_")[0]);
-                            if (c_list.indexOf(string) < 0)
-                                return {
-                                    code: 400,
-                                    body: {"error": "Invalid IS"}
-                                };
-                            if (typeof(target[string]) != "string")
-                                return {
-                                    code: 400,
-                                    body: {"error": "Invalid IS"}
-                                };
-                            break;
-                        case 'NOT':
-                            target = where["NOT"][h1_keys_not[0]];
-                            target_key = Object.keys(target);
-                            let rec = validateWhere(target, missing, c_list);
-                            if (rec != true)
-                                return rec;
-                            string = target_key.toString();
-                            if (target.length == 1) {
-                                string = target_key.toString();
-                                if (!fs.existsSync("./data/" +
-                                        string.split("_")[0] + ".dat"))
-                                    missing.push(string.split("_")[0]);
-                            }
-                            break;
-                    }
-                    if (target == null)
-                        return {code: 400, body: {"error": "Invalid query: key6"}};
-                    //console.log(string);
-                }
+            case 'NOT':
+                //console.log(target[where_keys[k]]);
+                if(Object.keys(target[where_keys[k]]).length!=1)
+                    return {code:400, body:{"error": "NOT should have only one filter"}};
+                let local_res = validateWhere(target[where_keys[k]], missing, c_list);
+                if(local_res != true)
+                    return local_res;
                 break;
             default:
-                return {code: 400, body: {"error": "Invalid query: default"}};
+                console.log(where_keys[k]);
+                break;
         }
     }
     return true;
