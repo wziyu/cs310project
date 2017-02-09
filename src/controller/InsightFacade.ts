@@ -1,4 +1,3 @@
-
 import {IInsightFacade, InsightResponse, QueryRequest} from "./IInsightFacade";
 
 import Log from "../Util"
@@ -193,45 +192,42 @@ export default class InsightFacade implements IInsightFacade {
     }
 }
 
-function intersect(a: any, b: any) {
-
+function intersect(a:any,b:any) {
     if (a.length == 0) {
-        return b;
+        return a;
     }
-
     var re = [];
-    for (let a1 of a) {
-        var flag = 0;
-        for (let b1 of b) {
-            if (b1.courses_uuid == a1.courses_uuid) {
-                flag = 1;
-                break;
-            }
-        }
-        if (flag == 1)
-            re.push(a1);
-    }
+    var actualTags = a.map(function (obj: any) {
+        return obj.courses_uuid;
+    });
 
+    for (var bb of b) {
+
+        if (actualTags.indexOf(bb.courses_uuid) != -1) {
+            re.push(bb);
+
+        }
+
+    }
     return re;
 }
+
+
+
+
 function union(a: any, b: any) {
     if (a.length == 0) {
         return b;
     }
-
     var re = [];
-    for (let a1 of a) {
-        var flag = 0;
-        for (let b1 of b) {
-            if (b1.courses_uuid == a1.courses_uuid) {
-                flag = 1;
-                break;
-            }
-        }
-        if (flag == 0)
-            re.push(a1);
-    }
-    re = re.concat(b);
+    var actualTags = a.map(function (obj: any) {
+        return obj.courses_uuid;
+    });
+
+    var b_after = b.filter(function(bb:any) {
+        return actualTags.indexOf(bb.courses_uuid) == -1 // if truthy then keep item
+    })
+    re = b_after.concat(a);
     return re;
 }
 
@@ -249,8 +245,20 @@ function helper(key: string, filter: any, coursedata: any[]) {
             }
             var last: any = [];
 
+            let i:number=0;
+
+            if(results.length>1){
+                last=results[0];
+            }
+
+
             for (var r of results) {
+                //console.log("------------"+i+"--------------");
+                if (results.indexOf(r)==0){
+                    continue;
+                }
                 last = intersect(last, r);
+                // console.log(last);
             }
             return last;
 
@@ -328,7 +336,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
             for (let v of coursedata) {
                 if (query_number.indexOf("*") == 0 && query_number.length > 1) {
                     if (query_number.indexOf("*", 1) == query_number.length - 1) {
-                        if (v[query_keys].toString().endsWith(query_number.substring(1, query_number.length - 1))) {
+                        if (v[query_keys].toString().includes(query_number.substring(1, query_number.length - 1))) {
                             courses.push(v);
                         }
                     } else {
