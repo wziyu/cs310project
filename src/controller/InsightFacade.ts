@@ -5,7 +5,8 @@ import {isUndefined} from "util";
 let JSZip = require("jszip");
 let fs = require("fs");
 const parse5 = require('parse5');
-const rq = require('request');
+const http = require('http');
+const request = require('request');
 export default class InsightFacade implements IInsightFacade {
     constructor() {
         Log.trace('InsightFacadeImpl::init()');
@@ -17,7 +18,6 @@ export default class InsightFacade implements IInsightFacade {
             zip.loadAsync(content, {base64: true}).then(function (data: any) {
                 if(id == "courses")
                 {
-                    //console.log(data);
                     let proList: Promise<string>[] = [];
                     let keys = Object.keys(data);
                     let objkeys = Object.keys(data[keys[0]]);
@@ -101,8 +101,7 @@ export default class InsightFacade implements IInsightFacade {
                     let proList: Promise<string>[] = [];
                     let keys = Object.keys(data);
                     let objkeys = Object.keys(data[keys[0]]);
-                    let rooms: any = [];
-                    let address:any = [];
+                    let rooms:any[] = [];
                     let building_list:any[] = [];
                     zip.file("index.htm").async("string").then(function (data:any){
                         let parsed = parse5.parse(data);
@@ -115,17 +114,87 @@ export default class InsightFacade implements IInsightFacade {
                                 proList.push(file.async("string"));
                             }
                         }
-                        Promise.all(proList).then(strings => {
+                        Promise.all(proList).then(strings =>
+                        {
 
                             for(let s of strings)
                             {
+                                let buildingInfo:any[] = [];
+                                let rooms_shortnames: any[] = [];
+                                let rooms_numbers: any[] = [];
+                                let rooms_names: any[] = [];
+                                let rooms_seats: any[] = [];
+                                let rooms_types: any[]= [];
+                                let rooms_furnitures: any[] = [];
+                                let rooms_hrefs: any[] = [];
                                 let tree = parse5.parse(s);
-                                building_tree_helper(tree, rooms, address);
+                                building_tree_helper(tree,buildingInfo,rooms_shortnames,
+                                    rooms_numbers,rooms_names,rooms_seats,rooms_types,rooms_furnitures,rooms_hrefs);
+                                if(rooms_shortnames.length !== 0)
+                                {
+                                    for(let i:number=0; i<rooms_shortnames.length; i++)
+                                    {
+                                        let room = {
+                                            rooms_fullname: buildingInfo[0],
+                                            rooms_shortname: rooms_shortnames[i],
+                                            rooms_number: rooms_numbers[i],
+                                            rooms_name: rooms_names[i],
+                                            rooms_address: buildingInfo[1],
+                                            rooms_lat:0,
+                                            rooms_lon:0,
+                                            rooms_seats: rooms_seats[i],
+                                            rooms_type: rooms_types[i],
+                                            rooms_furniture: rooms_furnitures[i],
+                                            rooms_href: rooms_hrefs[i]
+                                        };
+                                        rooms.push(room);
+                                    }
+                                }
+
                             }
-                            return resolve({code: 201, body: {}});
+                            let geo_proList:Promise<Object>[] = [];
+                            for(let rm of rooms)
+                            {
+                                geo_proList.push(geo_helper(rm));
+
+                            }
+                            Promise.all(geo_proList).then(values=>{
+
+                                let parsed = JSON.parse(JSON.stringify(values));
+                                for(let i:number=0; i<parsed.length; i++)
+                                {
+                                    let parsed_p = JSON.parse(parsed[i]);
+                                    rooms[i].rooms_lat = parsed_p.lat;
+                                    rooms[i].rooms_lon = parsed_p.lon;
+                                }
+
+                                if (rooms.length === 0)
+                                    return reject({code: 400, body: {'error': "Nothing to write"}});
+                                if (fs.existsSync("./data")) {
+                                    if (fs.existsSync("./data/" + id + ".dat")) {
+                                        console.log("rewriting...");
+                                        fs.writeFileSync("./data/" + id + ".dat", JSON.stringify(rooms));
+                                        return resolve({code: 201, body: {}});
+                                    }
+                                    else {
+                                        let path: string = "./data/" + id + ".dat";
+                                        fs.writeFileSync(path, JSON.stringify(rooms));
+                                        return resolve({code: 204, body: {}});
+                                    }
+                                }
+                                else {
+                                    fs.mkdirSync("./data");
+                                    let path: string = "./data/" + id + ".dat";
+                                    fs.writeFileSync(path, JSON.stringify(rooms));
+                                    return resolve({code: 204, body: {}});
+                                }
+                            });
+
+
                         }).catch(function (err) {
                             return reject({code: 400, body: {"error": err.toString()}});
                         });
+
                     }).catch(function (err: any){
                         return reject({code: 400, body: {"error": err.toString()}});
                     });
@@ -166,21 +235,22 @@ export default class InsightFacade implements IInsightFacade {
             else if (query_keys.indexOf("WHERE") < 0 || query_keys.indexOf("OPTIONS") < 0) {
                 return reject({code: 400, body: {"error": "Invalid query: missing where or options 2"}});
             }
-            //console.log(query["OPTIONS"]);
             let missing: string[] = [];
             let c_list: string[] = [];
             let ids: string[] = [];
             let response = validateOptions(JSON.parse(JSON.stringify(query))["OPTIONS"], missing, c_list, ids);
-            //console.log(response);
             if (response != true) {
                 return reject(response);
+            }
+            else if(ids.length > 1)
+            {
+                return reject({code: 400, body: {"error": "Invalid query: Too much data sets"}});
             }
             else if (missing.length > 0) {
                 return reject({code: 424, body: missing});
             }
             else {
                 response = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list);
-                //console.log(response);
                 if (missing.length > 0) {
                     return reject({code: 424, body: missing});
                 }
@@ -188,8 +258,8 @@ export default class InsightFacade implements IInsightFacade {
                     return reject(response);
                 }
 
-
             }
+
 
 
 //dui
@@ -209,7 +279,7 @@ export default class InsightFacade implements IInsightFacade {
             let retData: any[] = [];
 
             for (let v of filtered_data) {
-                let newEntry: any = {}
+                let newEntry: any = {};
                 column.forEach(function (k: any) {
                     return newEntry[k] = v.hasOwnProperty(k) ? v[k] : null;
                 });
@@ -232,9 +302,21 @@ export default class InsightFacade implements IInsightFacade {
     }
 }
 
+function geo_helper(room:any)
+{
+    return new Promise(function (resolve, reject){
+        let uri = encodeURIComponent(room.rooms_address);
+        let url = "http://skaha.cs.ubc.ca:11316/api/v1/team185/"+uri;
+        request(url, function(err:any, res:any, body:any){
+            if(!err && res.statusCode === 200)
+                return resolve(body);
+            else
+                return reject(err);
+        });
+    });
+}
 function index_tree_helper(node: any, list: any)
 {
-    //console.log("hi");
     let nodeKeys = Object.keys(node);
     if(nodeKeys.indexOf('attrs')>-1)
     {
@@ -258,7 +340,8 @@ function index_tree_helper(node: any, list: any)
     //return true;
 }
 
-function building_tree_helper(node: any, rooms:any, address_list:any)
+function building_tree_helper(node:any,buildingInfo:any,rooms_shortnames:any,
+                              rooms_numbers:any,rooms_names:any,rooms_seats:any,rooms_types:any,rooms_furnitures:any,rooms_hrefs:any)
 {
     let key_list = [
         "views-field views-field-field-room-number",
@@ -270,120 +353,72 @@ function building_tree_helper(node: any, rooms:any, address_list:any)
     if(nodeKeys.indexOf('attrs')>-1)
     {
         let attrs = node.attrs;
-        for(let at of attrs)
+        for (let at of attrs)
         {
-            let room:string;
-            let shortname:string;
-            let fullname:string;
-            let address:string;
-            let href:string;
-            let number:string;
-            let room_name:string;
-            let seats:number;
-            let type:string;
-            let furniture:string;
-            if(at.name === "id" && at.value === "building-info")
-            {
-                let kids = node.childNodes;
-                let values = [];
-                for(let kid of kids)
-                {
-                    if(typeof kid.attrs !== 'undefined' && kid.attrs.length === 0)
-                    {
-                        if(typeof kid.childNodes !== 'undefined')
-                        {
-                            for (let a of kid.childNodes[0].attrs)
-                            {
-                                if (a.name === 'class' && a.value === 'field-content')
-                                {
-                                    let target_node = kid.childNodes[0].childNodes[0];
-                                    if(typeof target_node !== 'undefined' && typeof target_node.value !== 'undefined')
-                                        values.push(target_node.value);
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if(typeof kid.childNodes !== 'undefined')
-                        {
-                            for (let a of kid.attrs)
-                            {
-                                if (a.name === 'class' && a.value === 'building-field')
-                                {
-                                    for (let a of kid.childNodes[0].attrs)
-                                    {
-                                        if (a.name === 'class' && a.value === 'field-content')
-                                        {
-                                            let target_node = kid.childNodes[0].childNodes[0];
-                                            if(typeof target_node !== 'undefined' && typeof target_node.value !== 'undefined')
-                                                values.push(target_node.value);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                fullname = values[0];
-                address = values[1];
-                address_list.push(address);
-            }
-            else if(at.name === "class")
-            {
 
-                switch (at.value)
-                {
+            let shortname: string;
+            let href: string;
+            let number: string;
+            let room_name: string;
+            let seats: number;
+            let type: string;
+            let furniture: string;
+
+            if (at.name === "class")
+            {
+                switch (at.value) {
                     case key_list[0]:
-                        if(typeof node.childNodes !== 'undefined')
-                        {
-                            for(let kid of node.childNodes)
-                            {
-                                if(typeof kid.childNodes !== 'undefined' && kid.attrs.length != 0)
-                                {
-                                    for(let att of kid.attrs)
-                                    {
-                                        if(att.name == "href")
+                        if (typeof node.childNodes !== 'undefined') {
+                            for (let kid of node.childNodes) {
+                                if (typeof kid.childNodes !== 'undefined' && kid.attrs.length != 0) {
+                                    for (let att of kid.attrs) {
+                                        if (att.name == "href")
                                             href = att.value;
                                     }
                                     room_name = href.split("/room/")[1];
                                     number = room_name.split("-")[1];
                                     shortname = room_name.split("-")[0];
+                                    rooms_shortnames.push(shortname);
+                                    rooms_names.push(room_name);
+                                    rooms_numbers.push(number);
+                                    rooms_hrefs.push(href);
                                 }
                             }
                         }
                         break;
                     case key_list[1]:
-                        if(typeof node.childNodes !== 'undefined')
-                        {
-                            if(node.childNodes[0].value.replace( /^\D+/g, '') !== '')
-                            {
+                        if (typeof node.childNodes !== 'undefined') {
+                            if (node.childNodes[0].value.replace(/^\D+/g, '') !== '') {
                                 seats = node.childNodes[0].value.replace(/^\D+/g, '');
+                                rooms_seats.push(+seats);
                             }
                         }
                         break;
                     case key_list[2]:
-                        if(typeof node.childNodes !== 'undefined')
-                        {
-                            if(node.childNodes[0].value.replace(/\r?\n|\r/g, '').trim() != 'Furniture type')
-                            {
+                        if (typeof node.childNodes !== 'undefined') {
+                            if (node.childNodes[0].value.replace(/\r?\n|\r/g, '').trim() != 'Furniture type') {
                                 furniture = node.childNodes[0].value.replace(/\r?\n|\r/g, '').trim();
+                                rooms_furnitures.push(furniture);
                             }
                         }
                         break;
                     case key_list[3]:
-                        if(typeof node.childNodes !== 'undefined')
-                        {
-                            if(node.childNodes[0].value.replace(/\r?\n|\r/g, '').trim() != 'Room type')
-                            {
+                        if (typeof node.childNodes !== 'undefined') {
+                            if (node.childNodes[0].value.replace(/\r?\n|\r/g, '').trim() != 'Room type') {
                                 type = node.childNodes[0].value.replace(/\r?\n|\r/g, '').trim();
-                                //console.log(type);
+                                rooms_types.push(type);
                             }
                         }
                         break;
+                    case "field-content":
+                        let target_node = node.childNodes[0];
+                        if (typeof target_node !== 'undefined' && typeof target_node.value !== 'undefined')
+                            if(target_node.value.indexOf('Building Hours')<0)
+                                buildingInfo.push(target_node.value);
+                        break;
                 }
             }
-            room = 
+
         }
     }
     if(nodeKeys.indexOf('childNodes')>-1)
@@ -391,7 +426,8 @@ function building_tree_helper(node: any, rooms:any, address_list:any)
         let children = node.childNodes;
         for(let child of children)
         {
-            building_tree_helper(child,rooms,address_list);
+            building_tree_helper(child,buildingInfo,rooms_shortnames,
+                rooms_numbers,rooms_names,rooms_seats,rooms_types,rooms_furnitures,rooms_hrefs);
         }
     }
     //return true;
@@ -458,12 +494,10 @@ function helper(key: string, filter: any, coursedata: any[]) {
 
 
             for (var r of results) {
-                //console.log("------------"+i+"--------------");
                 if (results.indexOf(r)==0){
                     continue;
                 }
                 last = intersect(last, r);
-                // console.log(last);
             }
             return last;
 
@@ -521,7 +555,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
                     courses.push(v);
                 }
             }
-            //console.log(courses);
+
             return courses;
         case "LT":
             var query_keys = Object.keys(filter)[0];
@@ -532,7 +566,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
                     courses.push(v);
                 }
             }
-            //console.log(courses);
+
             return courses;
         case "IS":
             var query_keys = Object.keys(filter)[0];
@@ -566,6 +600,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
     }
 
 }
+
 function validateOptions(options: any, missing: string[], c_list: string[], ids: string[]) {
     let clean_output_keys =
         [
@@ -591,7 +626,7 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
         if (form == null || form != "TABLE")
             return {code: 400, body: {"error": "Invalid query: FORM"}};
         for (let c of columns) {
-            //console.log(c);
+
             let slices = c.split("_");
             if (!fs.existsSync("./data/" + slices[0] + ".dat")) {
                 if (missing.indexOf(slices[0]) < 0)
@@ -606,7 +641,7 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
                 }
             }
         }
-        //console.log(c_list);
+
         if (order != null) {
             if (clean_output_keys.indexOf(order) < 0 || c_list.indexOf(order) < 0) {
                 return {code: 400, body: {"error": "Invalid query: ORDER"}};
@@ -623,6 +658,7 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
         return true;
     }
 }
+
 function validateWhere(target: any, missing: string[], c_list: string[]): any {
     let where_keys = Object.keys(target);
     let return_list = [];
@@ -696,7 +732,6 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                 break;
             case 'EQ':
                 key_string = Object.keys(target[where_keys[k]]).toString();
-                console.log(clean_output_keys.indexOf(key_string.split("_")[1]));
                 if (key_string!= "" && !fs.existsSync("./data/" + key_string.split("_")[0] + ".dat"))
                 {
                     if(missing.indexOf(key_string.split("_")[0])<0)
@@ -731,7 +766,6 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                     };
                 break;
             case 'NOT':
-                //console.log(target[where_keys[k]]);
                 if(Object.keys(target[where_keys[k]]).length!=1)
                     return {code:400, body:{"error": "NOT should have only one filter"}};
                 let local_res = validateWhere(target[where_keys[k]], missing, c_list);
@@ -739,7 +773,6 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                     return local_res;
                 break;
             default:
-                //console.log(where_keys[k]);
                 return {code:400, body:{"error": "Invalid query"}};
 
         }
