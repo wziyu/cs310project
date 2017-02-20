@@ -442,12 +442,12 @@ function intersect(a:any,b:any) {
     }
     var re = [];
     var actualTags = a.map(function (obj: any) {
-        return obj.courses_uuid;
+        return (obj.courses_uuid||obj.rooms_name);
     });
 
     for (var bb of b) {
 
-        if (actualTags.indexOf(bb.courses_uuid) != -1) {
+        if ((actualTags.indexOf(bb.courses_uuid) != -1)||(actualTags.indexOf(bb.rooms_name) != -1)) {
             re.push(bb);
 
         }
@@ -465,11 +465,11 @@ function union(a: any, b: any) {
     }
     var re = [];
     var actualTags = a.map(function (obj: any) {
-        return obj.courses_uuid;
+        return (obj.courses_uuid||obj.rooms_name);
     });
 
     var b_after = b.filter(function(bb:any) {
-        return actualTags.indexOf(bb.courses_uuid) == -1 // if truthy then keep item
+        return ((actualTags.indexOf(bb.courses_uuid) == -1)||(actualTags.indexOf(bb.rooms_name) != -1)) // if truthy then keep item
     })
     re = b_after.concat(a);
     return re;
