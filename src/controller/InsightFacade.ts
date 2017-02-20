@@ -442,12 +442,12 @@ function intersect(a:any,b:any) {
     }
     var re = [];
     var actualTags = a.map(function (obj: any) {
-        return (obj.courses_uuid||obj.rooms_name);
+        return obj.courses_uuid;
     });
 
     for (var bb of b) {
 
-        if ((actualTags.indexOf(bb.courses_uuid) != -1)||(actualTags.indexOf(bb.rooms_name) != -1)) {
+        if (actualTags.indexOf(bb.courses_uuid) != -1) {
             re.push(bb);
 
         }
@@ -465,11 +465,11 @@ function union(a: any, b: any) {
     }
     var re = [];
     var actualTags = a.map(function (obj: any) {
-        return (obj.courses_uuid||obj.rooms_name);
+        return obj.courses_uuid;
     });
 
     var b_after = b.filter(function(bb:any) {
-        return ((actualTags.indexOf(bb.courses_uuid) == -1)||(actualTags.indexOf(bb.rooms_name) != -1)) // if truthy then keep item
+        return actualTags.indexOf(bb.courses_uuid) == -1 // if truthy then keep item
     })
     re = b_after.concat(a);
     return re;
@@ -623,14 +623,14 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
                 if (missing.indexOf(slices[0]) < 0)
                     missing.push(slices[0]);
             }
-            else {
-                if (c_list.indexOf(c) < 0) {
-                    c_list.push(c);
-                }
-                if (ids.indexOf(slices[0]) < 0) {
-                    ids.push(slices[0]);
-                }
+
+            if (c_list.indexOf(c) < 0) {
+                c_list.push(c);
             }
+            if (ids.indexOf(slices[0]) < 0) {
+                ids.push(slices[0]);
+            }
+
         }
         let clean_output_keys:string[] = [];
         if(ids.length === 1 && ids[0] === "courses") {
