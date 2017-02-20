@@ -291,7 +291,10 @@ export default class InsightFacade implements IInsightFacade {
             if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
                 let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                 retData.sort(function (a: any, b: any) {
-                    return a[order] - b[order];
+                    if (typeof a[order] === "number") {
+                        return a[order] - b[order];
+                    }
+                    return a[order].toString().localeCompare(b[order].toString());
                 });
             }
 
@@ -442,12 +445,12 @@ function intersect(a:any,b:any) {
     }
     var re = [];
     var actualTags = a.map(function (obj: any) {
-        return obj.courses_uuid;
+        return (obj.courses_uuid||obj.rooms_name);
     });
 
     for (var bb of b) {
 
-        if (actualTags.indexOf(bb.courses_uuid) != -1) {
+        if ((actualTags.indexOf(bb.courses_uuid) != -1)||(actualTags.indexOf(bb.rooms_name) != -1)) {
             re.push(bb);
 
         }
@@ -465,11 +468,11 @@ function union(a: any, b: any) {
     }
     var re = [];
     var actualTags = a.map(function (obj: any) {
-        return obj.courses_uuid;
+        return (obj.courses_uuid||obj.rooms_name);
     });
 
     var b_after = b.filter(function(bb:any) {
-        return actualTags.indexOf(bb.courses_uuid) == -1 // if truthy then keep item
+        return ((actualTags.indexOf(bb.courses_uuid) == -1)&&(actualTags.indexOf(bb.rooms_name) == -1)) // if truthy then keep item
     })
     re = b_after.concat(a);
     return re;
@@ -528,10 +531,10 @@ function helper(key: string, filter: any, coursedata: any[]) {
             var numbers: any = [];
 
             for (let n of result) {
-                numbers.push(n['courses_uuid'])
+                numbers.push(n['courses_uuid']||n['rooms_name'])
             }
             for(let v of coursedata){
-                if(numbers.indexOf(v['courses_uuid']) == -1){
+                if((numbers.indexOf(v['courses_uuid']) == -1)&&(numbers.indexOf(v['rooms_name']) == -1)){
                     courses.push(v);
                 }
             }
