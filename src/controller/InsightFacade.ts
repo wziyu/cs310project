@@ -291,10 +291,7 @@ export default class InsightFacade implements IInsightFacade {
             if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
                 let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                 retData.sort(function (a: any, b: any) {
-                    if (typeof a[order] === "number") {
-                        return a[order] - b[order];
-                    }
-                    return a[order].toString().localeCompare(b[order].toString());
+                    return a[order] - b[order];
                 });
             }
 
@@ -459,9 +456,6 @@ function intersect(a:any,b:any) {
     return re;
 }
 
-
-
-
 function union(a: any, b: any) {
     if (a.length == 0) {
         return b;
@@ -531,10 +525,10 @@ function helper(key: string, filter: any, coursedata: any[]) {
             var numbers: any = [];
 
             for (let n of result) {
-                numbers.push(n['courses_uuid']||n['rooms_name'])
+                numbers.push(n['courses_uuid'])
             }
             for(let v of coursedata){
-                if((numbers.indexOf(v['courses_uuid']) == -1)&&(numbers.indexOf(v['rooms_name']) == -1)){
+                if(numbers.indexOf(v['courses_uuid']) == -1){
                     courses.push(v);
                 }
             }
