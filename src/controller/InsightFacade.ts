@@ -48,7 +48,8 @@ export default class InsightFacade implements IInsightFacade {
                                     'Pass',
                                     'Fail',
                                     'Audit',
-                                    'id'
+                                    'id',
+                                    'Year'
                                 ];
                             let clean_output_keys =
                                 [
@@ -60,13 +61,17 @@ export default class InsightFacade implements IInsightFacade {
                                     'courses_pass',
                                     'courses_fail',
                                     'courses_audit',
-                                    'courses_uuid'
+                                    'courses_uuid',
+                                    'courses_year'
                                 ];
 
                             for (let r of results) {
                                 let newo: any = {};
                                 for (let i: number = 0; i < clean_input_keys.length; i++) {
-                                    newo[clean_output_keys[i]] = r[clean_input_keys[i]];
+                                    if(r['Section'] === "overall")
+                                        newo['Year'] = 1900;
+                                    else
+                                        newo[clean_output_keys[i]] = r[clean_input_keys[i]];
                                 }
                                 processed_results.push(newo);
                             }
@@ -242,15 +247,11 @@ export default class InsightFacade implements IInsightFacade {
             if (response != true) {
                 return reject(response);
             }
-            else if(ids.length > 1)
-            {
-                return reject({code: 400, body: {"error": "Invalid query: Too much data sets"}});
-            }
             else if (missing.length > 0) {
                 return reject({code: 424, body: missing});
             }
             else {
-                response = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list);
+                response = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list, ids);
                 if (missing.length > 0) {
                     return reject({code: 424, body: missing});
                 }
@@ -602,18 +603,6 @@ function helper(key: string, filter: any, coursedata: any[]) {
 }
 
 function validateOptions(options: any, missing: string[], c_list: string[], ids: string[]) {
-    let clean_output_keys =
-        [
-            'courses_dept',
-            'courses_id',
-            'courses_avg',
-            'courses_instructor',
-            'courses_title',
-            'courses_pass',
-            'courses_fail',
-            'courses_audit',
-            'courses_uuid'
-        ];
     let opt_keys = Object.keys(options);
     if (opt_keys.length < 2)
         return {code: 400, body: {"error": "Invalid query by options length"}};
@@ -641,7 +630,44 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
                 }
             }
         }
-
+        let clean_output_keys:string[] = [];
+        if(ids.length === 1 && ids[0] === "courses") {
+            clean_output_keys =
+                [
+                    'courses_dept',
+                    'courses_id',
+                    'courses_avg',
+                    'courses_instructor',
+                    'courses_title',
+                    'courses_pass',
+                    'courses_fail',
+                    'courses_audit',
+                    'courses_uuid',
+                    'courses_year'
+                ];
+        }
+        else if(ids.length === 1 && ids[0] === "rooms") {
+            clean_output_keys =
+                [
+                    'rooms_fullname',
+                    'rooms_shortname',
+                    'rooms_number',
+                    'rooms_name',
+                    'rooms_lat',
+                    'rooms_lon',
+                    'rooms_seats',
+                    'rooms_type',
+                    'rooms_address',
+                    'rooms_furniture',
+                    'rooms_href'
+                ];
+            if(!fs.existsSync("./data/" + ids[0] + ".dat"))
+                return {code: 400, body: {"error": "Invalid query: Data set has not been added"}};
+        }
+        else
+        {
+            return {code: 400, body: {"error": "Invalid query: Too much data sets"}};
+        }
         if (order != null) {
             if (clean_output_keys.indexOf(order) < 0 || c_list.indexOf(order) < 0) {
                 return {code: 400, body: {"error": "Invalid query: ORDER"}};
@@ -659,21 +685,43 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
     }
 }
 
-function validateWhere(target: any, missing: string[], c_list: string[]): any {
+function validateWhere(target: any, missing: string[], c_list: string[], ids:string[]): any {
     let where_keys = Object.keys(target);
     let return_list = [];
-    let clean_output_keys =
-        [
-            'dept',
-            'id',
-            'avg',
-            'instructor',
-            'title',
-            'pass',
-            'fail',
-            'audit',
-            'uuid'
-        ];
+    let clean_output_keys:string[] = [];
+    if(ids.length === 1 && ids[0] === "courses")
+        clean_output_keys =
+            [
+                'dept',
+                'id',
+                'avg',
+                'instructor',
+                'title',
+                'pass',
+                'fail',
+                'audit',
+                'uuid',
+                'year'
+            ];
+    else if(ids.length === 1 && ids[0] === "rooms")
+    {
+        clean_output_keys =
+            [
+                'fullname',
+                'shortname',
+                'address',
+                'number',
+                'name',
+                'lat',
+                'lon',
+                'seats',
+                'type',
+                'furniture',
+                'href'
+            ];
+        if(!fs.existsSync("./data/" + ids[0] + ".dat"))
+            return {code: 400, body: {"error": "Invalid query: Data set has not been added"}};
+    }
     for (let k in where_keys)
     {
         let key_string:string;
@@ -684,7 +732,7 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                     return {code:400, body:{"error": "AND should have at least one filter"}};
                 for(let t of target[where_keys[k]])
                 {
-                    let local_res = validateWhere(t, missing, c_list);
+                    let local_res = validateWhere(t, missing, c_list, ids);
                     if(local_res != true)
                         return_list.push(local_res);
                 }
@@ -694,7 +742,7 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
                     return {code:400, body:{"error": "OR should have at least one filter"}};
                 for(let t of target[where_keys[k]])
                 {
-                    let local_res = validateWhere(t, missing, c_list);
+                    let local_res = validateWhere(t, missing, c_list, ids);
                     if(local_res != true)
                         return_list.push(local_res);
                 }
@@ -768,7 +816,7 @@ function validateWhere(target: any, missing: string[], c_list: string[]): any {
             case 'NOT':
                 if(Object.keys(target[where_keys[k]]).length!=1)
                     return {code:400, body:{"error": "NOT should have only one filter"}};
-                let local_res = validateWhere(target[where_keys[k]], missing, c_list);
+                let local_res = validateWhere(target[where_keys[k]], missing, c_list, ids);
                 if(local_res != true)
                     return local_res;
                 break;
