@@ -1,6 +1,6 @@
-import {IInsightFacade, InsightResponse, QueryRequest} from "./IInsightFacade";
 
-import Log from "../Util"
+import {IInsightFacade, InsightResponse, QueryRequest} from "./IInsightFacade";
+import Log from "../Util";
 import {isUndefined} from "util";
 let JSZip = require("jszip");
 let fs = require("fs");
