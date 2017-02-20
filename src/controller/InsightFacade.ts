@@ -232,8 +232,6 @@ export default class InsightFacade implements IInsightFacade {
 
 
         return new Promise<InsightResponse>(function (resolve, reject) {
-            //let query_json = JSON.parse(query.toString());
-
             let query_keys = Object.keys(query);
             //validate query
             if (query_keys.length < 2) {
@@ -456,6 +454,9 @@ function intersect(a:any,b:any) {
     return re;
 }
 
+
+
+
 function union(a: any, b: any) {
     if (a.length == 0) {
         return b;
@@ -525,10 +526,10 @@ function helper(key: string, filter: any, coursedata: any[]) {
             var numbers: any = [];
 
             for (let n of result) {
-                numbers.push(n['courses_uuid'])
+                numbers.push(n['courses_uuid']||n['rooms_name'])
             }
             for(let v of coursedata){
-                if(numbers.indexOf(v['courses_uuid']) == -1){
+                if((numbers.indexOf(v['courses_uuid']) == -1)&&(numbers.indexOf(v['rooms_name']) == -1)){
                     courses.push(v);
                 }
             }
@@ -600,6 +601,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
     }
 
 }
+
 
 function validateOptions(options: any, missing: string[], c_list: string[], ids: string[]) {
     let opt_keys = Object.keys(options);
