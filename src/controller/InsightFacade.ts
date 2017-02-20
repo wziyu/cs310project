@@ -376,7 +376,7 @@ function building_tree_helper(node:any,buildingInfo:any,rooms_shortnames:any,
                                         if (att.name == "href")
                                             href = att.value;
                                     }
-                                    room_name = href.split("/room/")[1];
+                                    room_name = href.split("/room/")[1].replace("-","_");
                                     number = room_name.split("-")[1];
                                     shortname = room_name.split("-")[0];
                                     rooms_shortnames.push(shortname);
@@ -645,6 +645,8 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
                     'courses_uuid',
                     'courses_year'
                 ];
+            if(!fs.existsSync("./data/" + ids[0] + ".dat"))
+                return {code: 424, body: {"error": "Invalid query: Data set has not been added"}}
         }
         else if(ids.length === 1 && ids[0] === "rooms") {
             clean_output_keys =
@@ -662,12 +664,13 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
                     'rooms_href'
                 ];
             if(!fs.existsSync("./data/" + ids[0] + ".dat"))
-                return {code: 400, body: {"error": "Invalid query: Data set has not been added"}};
+                return {code: 424, body: {"error": "Invalid query: Data set has not been added"}};
         }
-        else
+        else if(ids.length > 1)
         {
             return {code: 400, body: {"error": "Invalid query: Too much data sets"}};
         }
+        else{}
         if (order != null) {
             if (clean_output_keys.indexOf(order) < 0 || c_list.indexOf(order) < 0) {
                 return {code: 400, body: {"error": "Invalid query: ORDER"}};
@@ -689,7 +692,7 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
     let where_keys = Object.keys(target);
     let return_list = [];
     let clean_output_keys:string[] = [];
-    if(ids.length === 1 && ids[0] === "courses")
+    if(ids.length === 1 && ids[0] === "courses") {
         clean_output_keys =
             [
                 'dept',
@@ -703,6 +706,9 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
                 'uuid',
                 'year'
             ];
+        if (!fs.existsSync("./data/" + ids[0] + ".dat"))
+            return {code: 424, body: {"error": "Invalid query: Data set has not been added"}};
+    }
     else if(ids.length === 1 && ids[0] === "rooms")
     {
         clean_output_keys =
@@ -720,8 +726,13 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
                 'href'
             ];
         if(!fs.existsSync("./data/" + ids[0] + ".dat"))
-            return {code: 400, body: {"error": "Invalid query: Data set has not been added"}};
+            return {code: 424, body: {"error": "Invalid query: Data set has not been added"}};
     }
+    else if(ids.length > 1)
+    {
+        return {code: 400, body: {"error": "Invalid query: Too much data sets"}};
+    }
+    else{}
     for (let k in where_keys)
     {
         let key_string:string;
@@ -802,12 +813,7 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
                     if(missing.length>0)
                         return true;
                 }
-                if (c_list.indexOf(key_string) < 0)
-                    return {
-                        code: 400,
-                        body: {"error": "Invalid IS"}
-                    };
-                else if(typeof(target[where_keys[k]][key_string])!="string" || clean_output_keys.indexOf(key_string.split("_")[1])<0)
+                if(typeof(target[where_keys[k]][key_string])!="string" || clean_output_keys.indexOf(key_string.split("_")[1])<0)
                     return {
                         code: 400,
                         body: {"error": "Invalid IS"}
