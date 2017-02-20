@@ -68,8 +68,8 @@ export default class InsightFacade implements IInsightFacade {
                             for (let r of results) {
                                 let newo: any = {};
                                 for (let i: number = 0; i < clean_input_keys.length; i++) {
-                                    if(r['Section'] === "overall")
-                                        newo['Year'] = 1900;
+                                    if(clean_input_keys[i] === "Year" && r['Section'] === "overall")
+                                        newo[clean_output_keys[i]] = 1900;
                                     else
                                         newo[clean_output_keys[i]] = r[clean_input_keys[i]];
                                 }
