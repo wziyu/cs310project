@@ -248,7 +248,7 @@ export default class InsightFacade implements IInsightFacade {
                 return reject(response1);
             }
             else if (missing.length > 0) {
-                return reject({code: 424, body: missing});
+                return reject({code: 424, body: {"missing":missing}});
             }
             else {
                 let response2 = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list, ids);
@@ -650,7 +650,8 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
                     'courses_year'
                 ];
             if(!fs.existsSync("./data/" + ids[0] + ".dat"))
-                return {code: 424, body: {"error": "Invalid query: Data set has not been added"}};
+                if (missing.indexOf(ids[0]) < 0)
+                    missing.push(ids[0]);
         }
         else if(ids.length === 1 && ids[0] === "rooms") {
             clean_output_keys =
@@ -668,7 +669,8 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
                     'rooms_href'
                 ];
             if(!fs.existsSync("./data/" + ids[0] + ".dat"))
-                return {code: 424, body: {"error": "Invalid query: Data set has not been added"}};
+                if (missing.indexOf(ids[0]) < 0)
+                    missing.push(ids[0]);
         }
         else if(ids.length > 1)
         {
@@ -711,7 +713,8 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
                 'year'
             ];
         if (!fs.existsSync("./data/" + ids[0] + ".dat"))
-            return {code: 424, body: {"error": "Invalid query: Data set has not been added"}};
+            if (missing.indexOf(ids[0]) < 0)
+                missing.push(ids[0]);
     }
     else if(ids.length === 1 && ids[0] === "rooms")
     {
@@ -730,7 +733,8 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
                 'href'
             ];
         if(!fs.existsSync("./data/" + ids[0] + ".dat"))
-            return {code: 424, body: {"error": "Invalid query: Data set has not been added"}};
+            if (missing.indexOf(ids[0]) < 0)
+                missing.push(ids[0]);
     }
     else if(ids.length > 1)
     {
