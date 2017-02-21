@@ -1,4 +1,3 @@
-
 import {IInsightFacade, InsightResponse, QueryRequest} from "./IInsightFacade";
 import Log from "../Util";
 import {isUndefined} from "util";
@@ -493,7 +492,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
 
             let i:number=0;
 
-            if(results.length>1){
+            if(results.length>=1){
                 last=results[0];
             }
 
