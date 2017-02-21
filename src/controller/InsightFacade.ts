@@ -126,14 +126,14 @@ export default class InsightFacade implements IInsightFacade {
 
                             for(let s of strings)
                             {
-                                let buildingInfo:any[] = [];
-                                let rooms_shortnames: any[] = [];
-                                let rooms_numbers: any[] = [];
-                                let rooms_names: any[] = [];
-                                let rooms_seats: any[] = [];
-                                let rooms_types: any[]= [];
-                                let rooms_furnitures: any[] = [];
-                                let rooms_hrefs: any[] = [];
+                                let buildingInfo:string[] = [];
+                                let rooms_shortnames: string[] = [];
+                                let rooms_numbers: string[] = [];
+                                let rooms_names: string[] = [];
+                                let rooms_seats: number[] = [];
+                                let rooms_types: string[]= [];
+                                let rooms_furnitures: string[] = [];
+                                let rooms_hrefs: string[] = [];
                                 let tree = parse5.parse(s);
                                 building_tree_helper(tree,buildingInfo,rooms_shortnames,
                                     rooms_numbers,rooms_names,rooms_seats,rooms_types,rooms_furnitures,rooms_hrefs);
@@ -171,8 +171,9 @@ export default class InsightFacade implements IInsightFacade {
                                 for(let i:number=0; i<parsed.length; i++)
                                 {
                                     let parsed_p = JSON.parse(parsed[i]);
-                                    rooms[i].rooms_lat = parsed_p.lat;
-                                    rooms[i].rooms_lon = parsed_p.lon;
+                                    rooms[i].rooms_lat = +parsed_p.lat;
+                                    rooms[i].rooms_lon = +parsed_p.lon;
+
                                 }
 
                                 if (rooms.length === 0)
@@ -811,6 +812,13 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
                         code: 400,
                         body: {"error": "Invalid EQ"}
                     };
+                else if(key_string == "rooms_number")
+                {
+                    return {
+                        code: 400,
+                        body: {"error": "Invalid EQ"}
+                    };
+                }
                 break;
             case 'IS':
                 key_string = Object.keys(target[where_keys[k]]).toString();
