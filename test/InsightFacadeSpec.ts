@@ -115,7 +115,7 @@ describe("InsightFacadeSpec", function () {
         let data = fs.readFileSync("testData/rooms.zip");
         //console.log(data);
         return facade.addDataset("rooms", data).then(function (value: InsightResponse) {
-            expect(value.code).to.equal(204)
+            expect(value.code).to.equal(201)
         }).catch(function (err) {
             Log.test('Error: ' + err);
             expect.fail();
@@ -126,7 +126,7 @@ describe("InsightFacadeSpec", function () {
         let data = fs.readFileSync("testData/courses.zip");
         //console.log(data);
         return facade.addDataset("courses", data).then(function (value: InsightResponse) {
-            expect(value.code).to.equal(204)
+            expect(value.code).to.equal(201)
         }).catch(function (err) {
             Log.test('Error: ' + err);
             expect.fail();
