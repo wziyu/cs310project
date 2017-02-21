@@ -289,7 +289,10 @@ export default class InsightFacade implements IInsightFacade {
             if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
                 let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                 retData.sort(function (a: any, b: any) {
-                    return a[order] - b[order];
+                    if (typeof a[order] === "number") {
+                        return a[order] - b[order];
+                    }
+                    return a[order].toString().localeCompare(b[order].toString());
                 });
             }
 
