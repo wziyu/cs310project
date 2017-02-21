@@ -780,6 +780,13 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
                         code: 400,
                         body: {"error": "Invalid GT"}
                     };
+                else if(key_string == "rooms_number")
+                {
+                    return {
+                        code: 400,
+                        body: {"error": "Invalid GT"}
+                    };
+                }
 
                 break;
             case 'LT':
@@ -796,6 +803,13 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
                         code: 400,
                         body: {"error": "Invalid LT"}
                     };
+                else if(key_string == "rooms_number")
+                {
+                    return {
+                        code: 400,
+                        body: {"error": "Invalid LT"}
+                    };
+                }
                 break;
             case 'EQ':
                 key_string = Object.keys(target[where_keys[k]]).toString();
