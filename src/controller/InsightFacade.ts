@@ -243,20 +243,20 @@ export default class InsightFacade implements IInsightFacade {
             let missing: string[] = [];
             let c_list: string[] = [];
             let ids: string[] = [];
-            let response = validateOptions(JSON.parse(JSON.stringify(query))["OPTIONS"], missing, c_list, ids);
-            if (response != true) {
-                return reject(response);
+            let response1 = validateOptions(JSON.parse(JSON.stringify(query))["OPTIONS"], missing, c_list, ids);
+            if (response1 !== null) {
+                return reject(response1);
             }
             else if (missing.length > 0) {
                 return reject({code: 424, body: missing});
             }
             else {
-                response = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list, ids);
+                let response2 = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list, ids);
                 if (missing.length > 0) {
                     return reject({code: 424, body: missing});
                 }
-                else if (response != true) {
-                    return reject(response);
+                else if (response2 !== true) {
+                    return reject(response2);
                 }
 
             }
@@ -377,8 +377,8 @@ function building_tree_helper(node:any,buildingInfo:any,rooms_shortnames:any,
                                             href = att.value;
                                     }
                                     room_name = href.split("/room/")[1].replace("-","_");
-                                    number = room_name.split("-")[1];
-                                    shortname = room_name.split("-")[0];
+                                    number = room_name.split("_")[1];
+                                    shortname = room_name.split("_")[0];
                                     rooms_shortnames.push(shortname);
                                     rooms_names.push(room_name);
                                     rooms_numbers.push(number);
@@ -438,7 +438,7 @@ function intersect(a:any,b:any) {
     if (a.length == 0) {
         return a;
     }
-    var re = [];
+    var re:any[] = [];
     var actualTags = a.map(function (obj: any) {
         return (obj.courses_uuid||obj.rooms_name);
     });
@@ -461,14 +461,14 @@ function union(a: any, b: any) {
     if (a.length == 0) {
         return b;
     }
-    var re = [];
+    var re:any[] = [];
     var actualTags = a.map(function (obj: any) {
         return (obj.courses_uuid||obj.rooms_name);
     });
 
     var b_after = b.filter(function(bb:any) {
-        return ((actualTags.indexOf(bb.courses_uuid) == -1)&&(actualTags.indexOf(bb.rooms_name) == -1)) // if truthy then keep item
-    })
+        return ((actualTags.indexOf(bb.courses_uuid) == -1)&&(actualTags.indexOf(bb.rooms_name) == -1)); // if truthy then keep item
+    });
     re = b_after.concat(a);
     return re;
 }
@@ -477,7 +477,7 @@ function union(a: any, b: any) {
 function helper(key: string, filter: any, coursedata: any[]) {
     switch (key) {
         case "AND":
-            var results = []
+            var results:any[] = [];
             for (var k of filter) {
                 let keys = Object.keys(k);
                 var a = keys[0];
@@ -647,7 +647,7 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
                     'courses_year'
                 ];
             if(!fs.existsSync("./data/" + ids[0] + ".dat"))
-                return {code: 424, body: {"error": "Invalid query: Data set has not been added"}}
+                return {code: 424, body: {"error": "Invalid query: Data set has not been added"}};
         }
         else if(ids.length === 1 && ids[0] === "rooms") {
             clean_output_keys =
@@ -671,7 +671,7 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
         {
             return {code: 400, body: {"error": "Invalid query: Too much data sets"}};
         }
-        else{}
+
         if (order != null) {
             if (clean_output_keys.indexOf(order) < 0 || c_list.indexOf(order) < 0) {
                 return {code: 400, body: {"error": "Invalid query: ORDER"}};
@@ -685,13 +685,13 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
         if (c_list.length <= 0)
             return {code: 400, body: {"error": "Invalid query: COLUMNS"}};
 
-        return true;
+        return null;
     }
 }
 
 function validateWhere(target: any, missing: string[], c_list: string[], ids:string[]): any {
     let where_keys = Object.keys(target);
-    let return_list = [];
+    let return_list:any[] = [];
     let clean_output_keys:string[] = [];
     if(ids.length === 1 && ids[0] === "courses") {
         clean_output_keys =
@@ -733,7 +733,7 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
     {
         return {code: 400, body: {"error": "Invalid query: Too much data sets"}};
     }
-    else{}
+
     for (let k in where_keys)
     {
         let key_string:string;
