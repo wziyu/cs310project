@@ -1,3 +1,8 @@
+For deliverable d2, this commit received a grade of 98%.
+
+Test summary: 100% (50 passing, 0 failing, 0 skipped)
+Line coverage: 87%
+
 For D2, my main focus is on making upgrades to addDataset and ensuring that all data are added as clean and well-formatted JSON objects.
 Also, in order to fit all the new keys that were added from rooms' htmls, I also made improvements to validation functions for performQuery
 interface. This time we started earlier and we were well coordinated, thus we were able to hit 100% for both D1 and D2.
