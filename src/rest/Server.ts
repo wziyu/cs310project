@@ -7,7 +7,7 @@ import restify = require('restify');
 
 import Log from "../Util";
 import {InsightResponse} from "../controller/IInsightFacade";
-
+import InsightFacade from "../controller/InsightFacade";
 /**
  * This configures the REST endpoints for the server.
  */
@@ -62,6 +62,57 @@ export default class Server {
                 // provides the echo service
                 // curl -is  http://localhost:4321/echo/myMessage
                 that.rest.get('/echo/:msg', Server.echo);
+                that.rest.put('dataset/:id', function (req: restify.Request, res: restify.Response, next: restify.Next) {
+                    Log.trace('Server::put(..) - params: ' + req.body);
+                    try {
+                            let facade = new InsightFacade();
+                            facade.addDataset(req.params.id.toString(), req.body).then(function (result) {
+                            Log.info('Server::put(..) - responding ' + result.code);
+                            res.json(result.code, result.body);
+                        }).catch(function (result) {
+                            Log.info('Server::put(..) - responding ' + result.code);
+                            res.json(result.code, result.body);
+                        });
+                    } catch (err) {
+                        Log.error('Server::put(..) - responding 400');
+                        res.json(400, {error: err.message});
+                    }
+                    return next();
+                });
+                that.rest.del('dataset/:id', function (req: restify.Request, res: restify.Response, next: restify.Next){
+                    Log.trace('Server::del(..) - params: ' + req.body);
+                    try {
+                        let facade = new InsightFacade();
+                        facade.removeDataset(req.params.id.toString()).then(function (result) {
+                            Log.info('Server::del(..) - responding ' + result.code);
+                            res.json(result.code, result.body);
+                        }).catch(function (result) {
+                            Log.info('Server::del(..) - responding ' + result.code);
+                            res.json(result.code, result.body);
+                        });
+                    } catch (err) {
+                        Log.error('Server::del(..) - responding 400');
+                        res.json(400, {error: err.message});
+                    }
+                    return next();
+                });
+                that.rest.post('/query', function (req: restify.Request, res: restify.Response, next: restify.Next){
+                    Log.trace('Server::post(..) - params: ' + JSON.stringify(req.body));
+                    try {
+                        let facade = new InsightFacade();
+                        facade.performQuery(req.body).then(function (result) {
+                            Log.info('Server::post(..) - responding ' + result.code);
+                            res.json(result.code, result.body);
+                        }).catch(function (result) {
+                            Log.info('Server::post(..) - responding ' + result.code);
+                            res.json(result.code, result.body);
+                        });
+                    } catch (err) {
+                        Log.error('Server::post(..) - responding 400');
+                        res.json(400, {error: err.message});
+                    }
+                    return next();
+                });
 
                 // Other endpoints will go here
 
