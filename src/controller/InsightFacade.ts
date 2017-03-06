@@ -1,3 +1,4 @@
+
 import {IInsightFacade, InsightResponse, QueryRequest} from "./IInsightFacade";
 import Log from "../Util";
 import {isUndefined} from "util";
@@ -258,9 +259,34 @@ export default class InsightFacade implements IInsightFacade {
                 else if (response2 !== true) {
                     return reject(response2);
                 }
-
             }
-
+            console.log("Passed where test");
+            let groupBy:string[] = [];
+            let applyBy:any[] = [];
+            if(JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"])
+            {
+                let target = JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"];
+                let response3 = validateTransformation(target,groupBy,applyBy,ids);
+                let apply_keys:string[] = [];
+                for(let ap of applyBy)
+                {
+                    let k = Object.keys(ap);
+                    let val = k[0];
+                    apply_keys.push(val);
+                }
+                for(let c of c_list)
+                {
+                    if(groupBy.indexOf(c)<0 && apply_keys.indexOf(c)<0)
+                        return reject({code: 400, body: {"error": "Invalid query: All columns should be in group or apply"}});
+                }
+                if(response3 !== true)
+                {
+                    return reject(response3);
+                }
+                console.log(groupBy);
+                console.log(applyBy);
+            }
+            console.log("passed transformation test");
 
 
 //dui
@@ -621,7 +647,7 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
         for (let c of columns) {
 
             let slices = c.split("_");
-            if (!fs.existsSync("./data/" + slices[0] + ".dat")) {
+            if (!fs.existsSync("./data/" + slices[0] + ".dat") && slices.length > 1) {
                 if (missing.indexOf(slices[0]) < 0)
                     missing.push(slices[0]);
             }
@@ -629,7 +655,7 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
             if (c_list.indexOf(c) < 0) {
                 c_list.push(c);
             }
-            if (ids.indexOf(slices[0]) < 0) {
+            if (ids.indexOf(slices[0]) < 0 && slices.length > 1) {
                 ids.push(slices[0]);
             }
 
@@ -672,18 +698,37 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
                 if (missing.indexOf(ids[0]) < 0)
                     missing.push(ids[0]);
         }
-        else if(ids.length > 1)
+        else if(ids.length > 1 && missing.length < 1)
         {
-            return {code: 400, body: {"error": "Invalid query: Too much data sets"}};
+            return {code: 400, body: {"error": "Invalid query: Too many data sets"}};
         }
 
-        if (order != null) {
+        if (order != null && typeof order === "string") {
             if (clean_output_keys.indexOf(order) < 0 || c_list.indexOf(order) < 0) {
                 return {code: 400, body: {"error": "Invalid query: ORDER"}};
             }
             else if (!fs.existsSync("./data/" + order.split("_")[0] + ".dat")) {
                 if (missing.indexOf(order.split("_")[0]) < 0)
                     missing.push(order.split("_")[0]);
+            }
+        }
+        else if(order != null && typeof order === "object")
+        {
+            let orderKeys = Object.keys(order);
+            if(orderKeys.length !== 2 || orderKeys.indexOf("dir")<0 || orderKeys.indexOf("keys")<0)
+                return {code: 400, body: {"error": "Invalid query: ORDER format"}};
+            let dir = order["dir"];
+            let keys = order["keys"];
+            if(dir !== "UP" && dir !== "DOWN")
+                return {code: 400, body: {"error": "Invalid query: dir value invalid"}};
+            if(keys.length === 0)
+                return {code: 400, body: {"error": "Invalid query: keys cannot be empty"}};
+            else{
+                for(let val of keys)
+                {
+                    if(c_list.indexOf(val)<0)
+                        return {code: 400, body: {"error": "Invalid query: order keys need to be in columns"}};
+                }
             }
         }
 
@@ -696,6 +741,8 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
 
 function validateWhere(target: any, missing: string[], c_list: string[], ids:string[]): any {
     let where_keys = Object.keys(target);
+    if(where_keys.length === 0)
+        return true;
     let return_list:any[] = [];
     let clean_output_keys:string[] = [];
     if(ids.length === 1 && ids[0] === "courses") {
@@ -736,7 +783,7 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
             if (missing.indexOf(ids[0]) < 0)
                 missing.push(ids[0]);
     }
-    else if(ids.length > 1)
+    else if(ids.length > 1 && missing.length < 1)
     {
         return {code: 400, body: {"error": "Invalid query: Too much data sets"}};
     }
@@ -865,3 +912,90 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
     else
         return return_list[0];
 }
+
+function validateTransformation(target:any, groupBy: string[], applyBy: any[],ids: string[])
+{
+    let keys = Object.keys(target);
+    if(keys.length < 2 || keys.indexOf("GROUP") < 0 || keys.indexOf("APPLY") < 0)
+        return {code: 400, body: {"error": "Invalid query: TRANSFORMATIONS"}};
+    else
+    {
+        let group = target.GROUP;
+        if(group.length <= 0)
+            return {code: 400, body: {"error": "Invalid query: GROUP cannot be empty"}};
+        else
+        {
+            for(let s of group)
+            {
+                let id = s.split("_")[0];
+                if (ids.indexOf(id) < 0)
+                    return {code: 400, body: {"error": "Invalid query: Cannot perform on 2 sets"}};
+                else
+                    groupBy.push(s);
+            }
+
+        }
+        let apply = target.APPLY;
+        for(let o of apply)
+        {
+            let o_key = Object.keys(o);
+            for(let k of o_key)
+            {
+                if(k.indexOf("_")>=0)
+                    return {code: 400, body: {"error": "Invalid query: APPLY key cannot have _ "}};
+            }
+            if(o_key.length > 1 || o_key.length === 0)
+                return {code: 400, body: {"error": "Invalid query: APPLY structure invalid"}};
+            else
+            {
+                let obj = o[o_key[0]];
+                let obj_key = Object.keys(obj);
+                let app_tokens:string[] =
+                    [
+                        'MAX',
+                        'MIN',
+                        'AVG',
+                        'SUM',
+                        'COUNT'
+                    ];
+                if(app_tokens.indexOf(obj_key[0])<0)
+                    return {code: 400, body: {"error": "Invalid query: Apply token not recognized"}};
+                if(obj_key[0] === "MAX"||obj_key[0] === "MIN"||obj_key[0] === "AVG"||obj_key[0] === "SUM")
+                {
+                    let numeric:string[] = [];
+                    if(ids[0] === "courses")
+                    {
+                        numeric =
+                            [
+                                'courses_avg',
+                                'courses_pass',
+                                'courses_fail',
+                                'courses_audit',
+                                'courses_year'
+                            ];
+                        if(numeric.indexOf(obj[obj_key[0]]) < 0)
+                            return {code: 400, body: {"error": "Invalid query: Operator only supports numeric value"}};
+                    }
+                    else if(ids[0] === "rooms")
+                    {
+                        numeric =
+                            [
+                                'rooms_lat',
+                                'rooms_lon',
+                                'rooms_seats',
+                            ];
+                        if(numeric.indexOf(obj[obj_key[0]]) < 0)
+                            return {code: 400, body: {"error": "Invalid query: Operator only supports numeric value"}};
+                    }
+                    applyBy.push(o);
+                }
+
+            }
+
+        }
+
+    }
+    return true;
+
+}
+
