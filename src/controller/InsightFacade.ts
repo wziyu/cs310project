@@ -245,22 +245,6 @@ export default class InsightFacade implements IInsightFacade {
             let c_list: string[] = [];
             let ids: string[] = [];
             let response1 = validateOptions(JSON.parse(JSON.stringify(query))["OPTIONS"], missing, c_list, ids);
-            if (response1 !== null) {
-                return reject(response1);
-            }
-            else if (missing.length > 0) {
-                return reject({code: 424, body: {"missing":missing}});
-            }
-            else {
-                let response2 = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list, ids);
-                if (missing.length > 0) {
-                    return reject({code: 424, body: missing});
-                }
-                else if (response2 !== true) {
-                    return reject(response2);
-                }
-            }
-            console.log("Passed where test");
             let groupBy:string[] = [];
             let applyBy:any[] = [];
             if(JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"])
@@ -268,6 +252,10 @@ export default class InsightFacade implements IInsightFacade {
                 let target = JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"];
                 let response3 = validateTransformation(target,groupBy,applyBy,ids);
                 let apply_keys:string[] = [];
+                if(response3 !== true)
+                {
+                    return reject(response3);
+                }
                 for(let ap of applyBy)
                 {
                     let k = Object.keys(ap);
@@ -279,15 +267,25 @@ export default class InsightFacade implements IInsightFacade {
                     if(groupBy.indexOf(c)<0 && apply_keys.indexOf(c)<0)
                         return reject({code: 400, body: {"error": "Invalid query: All columns should be in group or apply"}});
                 }
-                if(response3 !== true)
-                {
-                    return reject(response3);
-                }
-                console.log(groupBy);
-                console.log(applyBy);
             }
-            console.log("passed transformation test");
-
+            //console.log("passed transformation test");
+            if (response1 !== null) {
+                return reject(response1);
+            }
+            else if (missing.length > 0) {
+                return reject({code: 424, body: {"missing":missing}});
+            }
+            else {
+                //console.log("passed option test");
+                let response2 = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list, ids);
+                if (missing.length > 0) {
+                    return reject({code: 424, body: missing});
+                }
+                else if (response2 !== true) {
+                    return reject(response2);
+                }
+            }
+            //console.log("Passed where test");
 
 //dui
             let where: any = JSON.parse(JSON.stringify(query))["WHERE"];
