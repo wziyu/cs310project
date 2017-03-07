@@ -913,6 +913,7 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
 
 function validateTransformation(target:any, groupBy: string[], applyBy: any[],ids: string[])
 {
+    let apply_obj_names:string[] = [];
     let keys = Object.keys(target);
     if(keys.length < 2 || keys.indexOf("GROUP") < 0 || keys.indexOf("APPLY") < 0)
         return {code: 400, body: {"error": "Invalid query: TRANSFORMATIONS"}};
@@ -939,6 +940,10 @@ function validateTransformation(target:any, groupBy: string[], applyBy: any[],id
             let o_key = Object.keys(o);
             for(let k of o_key)
             {
+                if(apply_obj_names.indexOf(k) < 0)
+                    apply_obj_names.push(k);
+                else
+                    return {code: 400, body: {"error": "Invalid query: APPLY objects should be unique"}};
                 if(k.indexOf("_")>=0)
                     return {code: 400, body: {"error": "Invalid query: APPLY key cannot have _ "}};
             }
