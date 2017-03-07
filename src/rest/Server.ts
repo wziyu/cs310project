@@ -59,7 +59,7 @@ export default class Server {
                     return next();
                 });
 
-                that.rest.use(restify.bodyParser());
+                that.rest.use(restify.bodyParser({mapParams: true, mapFiles: true}));
 
                 // provides the echo service
                 // curl -is  http://localhost:4321/echo/myMessage
@@ -68,8 +68,8 @@ export default class Server {
                     Log.trace('Server::put(..) - params: ' + req.body);
                     try {
                             let facade = new InsightFacade();
-                            let id:string = req.params.id.toString().slice(1);
-                            let data:string = req.body;
+                            let id:string = req.params.id.toString();
+                            let data = new Buffer(req.params.body).toString('base64');
                             facade.addDataset(id, data).then(function (result) {
                             Log.info('Server::put(..) - responding ' + result.code);
                             res.json(result.code, result.body);
@@ -87,7 +87,7 @@ export default class Server {
                     Log.trace('Server::del(..) - params: ' + req.body);
                     try {
                         let facade = new InsightFacade();
-                        let id:string = req.params.id.toString().slice(1);
+                        let id:string = req.params.id.toString();
                         facade.removeDataset(id).then(function (result) {
                             Log.info('Server::del(..) - responding ' + result.code);
                             res.json(result.code, result.body);
