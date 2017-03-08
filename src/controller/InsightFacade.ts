@@ -1048,7 +1048,7 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
         }
 
         if (order != null && typeof order === "string") {
-            if (clean_output_keys.indexOf(order) < 0 && c_list.indexOf(order) < 0) {
+            if (c_list.indexOf(order) < 0) {
                 return {code: 400, body: {"error": "Invalid query: ORDER"}};
             }
         }
@@ -1074,6 +1074,13 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
 
         if (c_list.length <= 0)
             return {code: 400, body: {"error": "Invalid query: COLUMNS"}};
+        else {
+            for(let c of c_list)
+            {
+                if(clean_output_keys.indexOf(c) < 0)
+                    return {code: 400, body: {"error": "Invalid query: COLUMNS"}};
+            }
+        }
 
         return null;
     }
@@ -1333,9 +1340,8 @@ function validateTransformation(target:any, groupBy: string[], applyBy: any[],id
                         if(numeric.indexOf(obj[obj_key[0]]) < 0)
                             return {code: 400, body: {"error": "Invalid query: Operator only supports numeric value"}};
                     }
-                    applyBy.push(o);
                 }
-
+                applyBy.push(o);
             }
 
         }
