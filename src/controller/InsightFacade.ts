@@ -342,24 +342,9 @@ export default class InsightFacade implements IInsightFacade {
                     let dir=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"];
                     let order=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["keys"]
                     if(dir=="UP"){
-                        // for (let o of order) {
-                            // if(!identical(retData,o)) {
                                 retData.sort(function (a: any, b: any) {
-                                    return sortingup(a,b,order);
-                                    // if ((a[o] > b[o])){
-                                    //     return 1;
-                                    // }
-                                    // else if ((a[o] == b[o])){
-                                    //     return 1;
-                                    // }
-                                    // else{
-                                    //     return 0;
-                                    // }
+                                    return sortingup(a,b,order);     
                                 });
-                                // break;
-                            // }
-                        // }
-
 
                     }
                     else{
@@ -367,41 +352,24 @@ export default class InsightFacade implements IInsightFacade {
 
                                 retData.sort(function (a: any, b: any) {
                                     return sortingdown(a,b,order);
-
-
-
                             });
 
                         }
-
-
                     }
                 }
                 else{
                     console.log("qqqqqqqqqqqqqqqqqqqqq");
                     let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                     retData.sort(function (a: any, b: any) {
-                        // if (typeof a[order] === "number") {
                             if (a[order] > b[order]){
                                 return 1;
                             }
                             else{
                                 return 0;
                             }
-                        // }
-                         //return a[order].toString().localeCompare(b[order].toString());
                     });
                 }
             }
-            // if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
-            //     let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
-            //     retData.sort(function (a: any, b: any) {
-            //         if (typeof a[order] === "number") {
-            //             return a[order] - b[order];
-            //         }
-            //         return a[order].toString().localeCompare(b[order].toString());
-            //     });
-            // }
 
             let re = {
                 render: 'TABLE',
@@ -459,11 +427,7 @@ function sortingdown(a:any,b:any,order:any){
 
 function apply_helper(data:any,apply:any){
 
-    // console.log(data);
     let key3 = Object.keys(data);
-    // console.log("qqqqqqqqqqqqqqqqqqqq");
-    // console.log(key3);
-    //var apply_result:any=key3;
     var apply_result = JSON.parse(JSON.stringify(key3));
 
     ;for (var i = 0; i < apply_result.length; i++) {
@@ -475,8 +439,6 @@ function apply_helper(data:any,apply:any){
 
         let keys = Object.keys(a);
         var b = keys[0];
-        // console.log("aaaaaaaaaaaaaaaaaa");
-        // console.log(b);
         var k = a[b];
         let key2 = Object.keys(k);
         var b2 = key2[0];
@@ -488,42 +450,26 @@ function apply_helper(data:any,apply:any){
                 for(let e of key3){
                     let comparearray:any=[];
                         let v=data[e];
-                        // console.log("vvvvvvvvvvvvvvvvv");
-                        // console.log(e);
-                        // console.log(v);
                         for (let vv of data[e]){
                             comparearray.push(vv[k2]);
                         }
-                    // console.log(comparearray);
                     let max=Math.max.apply(null,comparearray);
-                    //console.log(max);
                     let ret:any={};
                     ret[b]=max;
                     let newkey=JSON.stringify(ret);
-                     // console.log(newkey);
                     result.push(JSON.parse(newkey));
                 }
                 break;
             case "MIN":
 
                 for(let e of key3){
- ;
                     let comparearray:any=[];
-                    let v=data[e];
-                    // console.log("vvvvvvvvvvvvvvvvv");
-                    // console.log(e);
-
                     for (let vv of data[e]){
                         comparearray.push(vv[k2]);
                     }
-                    // console.log(comparearray);
                     let min=Math.min.apply(null,comparearray);
-                    //console.log(max);
                     let ret:any={};
                     ret[b]=min;
-                    let newkey=JSON.stringify(ret);
-                    // console.log("ggggggggggggggggg");
-                    // console.log(newkey);
                     result.push(JSON.parse(newkey));
 
                 }
@@ -539,22 +485,15 @@ function apply_helper(data:any,apply:any){
                     for (let vv of data[e]) {
                         comparearray.push(vv[k2]);
                     }
-                    // console.log(comparearray);
                     for (let i:number=0; i < comparearray.length; i++) {
                         comparearray[i] *= 10;
-
-
                         comparearray[i] = Number(comparearray[i].toFixed(0))
-
                      }
-
                     let sum:number=0;
                     for (let k of comparearray){
                         sum=sum+k;
                     }
-                    //var sum = comparearray.reduce((a:any, b:any) => a + b, 0);
-                    // console.log("qqqqqqqqqqqqq");
-                    // console.log(sum);
+
                     let avg:number = sum / (comparearray.length);
 
                     avg=avg/10;
@@ -574,20 +513,13 @@ function apply_helper(data:any,apply:any){
                     ;
                     let comparearray:any=[];
                     let v=data[e];
-                    // console.log("vvvvvvvvvvvvvvvvv");
-                    // console.log(e);
-
                     for (let vv of data[e]){
                         comparearray.push(vv[k2]);
                     }
-                    // console.log(comparearray);
                     let count=comparearray.length;
-                    //console.log(max);
                     let ret:any={};
                     ret[b]=count;
                     let newkey=JSON.stringify(ret);
-                    // console.log("ggggggggggggggggg");
-                    // console.log(newkey);
                     result.push(JSON.parse(newkey));
 
                 }
@@ -599,36 +531,22 @@ function apply_helper(data:any,apply:any){
                     ;
                     let comparearray:any=[];
                     let v=data[e];
-                    // console.log("vvvvvvvvvvvvvvvvv");
-                    // console.log(e);
-
                     for (let vv of data[e]){
                         comparearray.push(vv[k2]);
                     }
-                    // console.log(comparearray);
                     var sum = comparearray.reduce((a:any, b:any) => a + b, 0);
-                    //console.log(max);
                     let ret:any={};
                     ret[b]=sum;
                     let newkey=JSON.stringify(ret);
-                    // console.log("ggggggggggggggggg");
-                    // console.log(newkey);
                     result.push(JSON.parse(newkey));
-
                 }
                 break;
 
         }
 
         for (var i = 0; i < apply_result.length; i++) {
-
-             // if(apply_result[i])
-            // let temp=JSON.parse(apply_result[i]);
-            // console.log("zzzzzzzzzzz");
-            // console.log(temp);
             var result2 = Object.assign({},apply_result[i], result[i]);
             apply_result[i]=result2;
-            // console.log(apply_result[i]);
         }
 
     }
@@ -769,18 +687,6 @@ function building_tree_helper(node:any,buildingInfo:any,rooms_shortnames:any,
     //return true;
 }
 
-
-
-// function identical(array:any, order:any) {
-//     for(var i = 0; i < array.length - 1; i++) {
-//         if(array[i][order] !== array[i+1][order]) {
-//             return false;
-//         }
-//     }
-//     return true;
-// }
-
-
 function intersect(a:any,b:any) {
     if (a.length == 0) {
         return a;
@@ -833,15 +739,11 @@ function groupBy_helper(list:any, gp:any) {
             return newEntry[k] = list[i].hasOwnProperty(k) ? list[i][k] : null;
         });
         let group = JSON.stringify(newEntry);
-        //console.log(i,i,i,i,i,i);
-        //console.log(group);
         if (group in groups) {
             groups[group].push(list[i]);
         } else {
             groups[group] = [list[i]];
         }
-        //console.log(groups);
-        //console.log(i,i,i,i,i,i);
     }
     return groups;
 }
