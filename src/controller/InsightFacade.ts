@@ -1,3 +1,4 @@
+
 import {IInsightFacade, InsightResponse, QueryRequest} from "./IInsightFacade";
 import Log from "../Util";
 import {isUndefined} from "util";
@@ -244,12 +245,12 @@ export default class InsightFacade implements IInsightFacade {
             let c_list: string[] = [];
             let ids: string[] = [];
             let response1 = validateOptions(JSON.parse(JSON.stringify(query))["OPTIONS"], missing, c_list, ids);
-            let groupByRes:string[] = [];
+            let groupBy:string[] = [];
             let applyBy:any[] = [];
             if(JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"])
             {
                 let target = JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"];
-                let response3 = validateTransformation(target,groupByRes,applyBy,ids);
+                let response3 = validateTransformation(target,groupBy,applyBy,ids);
                 let apply_keys:string[] = [];
                 if(response3 !== true)
                 {
@@ -263,7 +264,7 @@ export default class InsightFacade implements IInsightFacade {
                 }
                 for(let c of c_list)
                 {
-                    if(groupByRes.indexOf(c)<0 && apply_keys.indexOf(c)<0)
+                    if(groupBy.indexOf(c)<0 && apply_keys.indexOf(c)<0)
                         return reject({code: 400, body: {"error": "Invalid query: All columns should be in group or apply"}});
                 }
             }
@@ -284,44 +285,25 @@ export default class InsightFacade implements IInsightFacade {
                     return reject(response2);
                 }
             }
-
-
+            //console.log("Passed where test");
 
 //dui
             let where: any = JSON.parse(JSON.stringify(query))["WHERE"];
-
+            var keys: any = Object.keys(where)[0];
+            var filter: any = where[keys];
             let json:any;
             if(ids.length > 0)
             {
                 if(fs.readFileSync("./data/"+ ids[0] + ".dat"))
                     json = fs.readFileSync("./data/"+ ids[0] + ".dat").toString();
             }
-
             let jonj = JSON.parse(json);
-            var filtered_data: any;
-            if(Object.keys(where).length === 0) {
-                filtered_data=jonj;
 
-            }
-            else {
-                var keys: any = Object.keys(where)[0];
-
-                var filter: any = where[keys];
-
-                filtered_data = helper(keys, filter, jonj);
-            }
-            //let group: any = JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"]["GROUP"];
-            let groupData: any[] = [];
-            groupData = groupBy(filtered_data, groupByRes);
-
-            //let apply: any = JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"]["APPLY"];
-            let apply_result=apply_helper(groupData,applyBy);
-
-
+            var filtered_data: any = helper(keys, filter, jonj);
             let column: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["COLUMNS"];
             let retData: any[] = [];
 
-            for (let v of apply_result) {
+            for (let v of filtered_data) {
                 let newEntry: any = {};
                 column.forEach(function (k: any) {
                     return newEntry[k] = v.hasOwnProperty(k) ? v[k] : null;
@@ -329,69 +311,14 @@ export default class InsightFacade implements IInsightFacade {
                 retData.push(newEntry);
             }
             if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
-                if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"])) {
-                    let dir=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"];
-                    let order=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["keys"]
-                    if(dir=="UP"){
-                        // for (let o of order) {
-                            // if(!identical(retData,o)) {
-                                retData.sort(function (a: any, b: any) {
-                                    return sortingup(a,b,order);
-                                    // if ((a[o] > b[o])){
-                                    //     return 1;
-                                    // }
-                                    // else if ((a[o] == b[o])){
-                                    //     return 1;
-                                    // }
-                                    // else{
-                                    //     return 0;
-                                    // }
-                                });
-                                // break;
-                            // }
-                        // }
-
-
+                let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
+                retData.sort(function (a: any, b: any) {
+                    if (typeof a[order] === "number") {
+                        return a[order] - b[order];
                     }
-                    else{
-                        for (let o of order) {
-
-                                retData.sort(function (a: any, b: any) {
-                                    return sortingdown(a,b,order);
-
-
-
-                            });
-
-                        }
-
-
-                    }
-                }
-                else{
-                    let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
-                    retData.sort(function (a: any, b: any) {
-                        // if (typeof a[order] === "number") {
-                            if (a[order] > b[order]){
-                                return 1;
-                            }
-                            else{
-                                return 0;
-                            }
-                        // }
-                         //return a[order].toString().localeCompare(b[order].toString());
-                    });
-                }
+                    return a[order].toString().localeCompare(b[order].toString());
+                });
             }
-            // if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
-            //     let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
-            //     retData.sort(function (a: any, b: any) {
-            //         if (typeof a[order] === "number") {
-            //             return a[order] - b[order];
-            //         }
-            //         return a[order].toString().localeCompare(b[order].toString());
-            //     });
-            // }
 
             let re = {
                 render: 'TABLE',
@@ -402,219 +329,6 @@ export default class InsightFacade implements IInsightFacade {
         });
     }
 }
-
-function sortingup(a:any,b:any,order:any){
-
-    for(var i=0 ; i<order.length;i++) {
-        if ((a[order[i]] > b[order[i]])) {
-            return 1;
-        }
-        else if ((a[order[i]] == b[order[i]])) {
-            if(i!=order.length-1) {
-                continue;
-            }
-            else{
-                return 0;
-            }
-        }
-        else {
-            return 0;
-        }
-
-    }
-
-}
-
-function sortingdown(a:any,b:any,order:any){
-
-    for(var i=0 ; i<order.length;i++) {
-        if ((a[order[i]] < b[order[i]])) {
-            return 1;
-        }
-        else if ((a[order[i]] == b[order[i]])) {
-            if(i!=order.length-1) {
-                continue;
-            }
-            else{
-                return 0;
-            }
-        }
-        else {
-            return 0;
-        }
-
-    }
-
-}
-
-function apply_helper(data:any,apply:any){
-
-    // console.log(data);
-    let key3 = Object.keys(data);
-    // console.log("qqqqqqqqqqqqqqqqqqqq");
-    // console.log(key3);
-    //var apply_result:any=key3;
-    var apply_result = JSON.parse(JSON.stringify(key3));
-
-    ;for (var i = 0; i < apply_result.length; i++) {
-        let temp=JSON.parse(apply_result[i]);
-        apply_result[i]=temp;
-    }
-
-    for(let a of apply){
-
-        let keys = Object.keys(a);
-        var b = keys[0];
-        // console.log("aaaaaaaaaaaaaaaaaa");
-        // console.log(b);
-        var k = a[b];
-        let key2 = Object.keys(k);
-        var b2 = key2[0];
-        var k2 = k[b2];
-        let result:any=[];
-        switch (b2) {
-            case "MAX":
-
-                for(let e of key3){
-                    let comparearray:any=[];
-                        let v=data[e];
-                        // console.log("vvvvvvvvvvvvvvvvv");
-                        // console.log(e);
-                        // console.log(v);
-                        for (let vv of data[e]){
-                            comparearray.push(vv[k2]);
-                        }
-                    // console.log(comparearray);
-                    let max=Math.max.apply(null,comparearray);
-                    //console.log(max);
-                    let ret:any={};
-                    ret[b]=max;
-                    let newkey=JSON.stringify(ret);
-                     // console.log(newkey);
-                    result.push(JSON.parse(newkey));
-                }
-                break;
-            case "MIN":
-
-                for(let e of key3){
- ;
-                    let comparearray:any=[];
-                    let v=data[e];
-                    // console.log("vvvvvvvvvvvvvvvvv");
-                    // console.log(e);
-
-                    for (let vv of data[e]){
-                        comparearray.push(vv[k2]);
-                    }
-                    // console.log(comparearray);
-                    let min=Math.min.apply(null,comparearray);
-                    //console.log(max);
-                    let ret:any={};
-                    ret[b]=min;
-                    let newkey=JSON.stringify(ret);
-                    // console.log("ggggggggggggggggg");
-                    // console.log(newkey);
-                    result.push(JSON.parse(newkey));
-
-                }
-                break;
-
-            case "AVG":
-
-                for(let e of key3) {
-                    ;
-                    let comparearray: any = [];
-                    let v = data[e];
-
-                    for (let vv of data[e]) {
-                        comparearray.push(vv[k2]);
-                    }
-                    // console.log(comparearray);
-                    for (let c of comparearray) {
-                         c = c * 10;
-                        c = Number(c.toFixed(0))
-                     }
-
-                    var sum = comparearray.reduce((a:any, b:any) => a + b, 0);
-                    var avg = sum / (comparearray.length);
-                    let ret:any={};
-                    ret[b]=avg;
-                    let newkey=JSON.stringify(ret);
-
-                    result.push(JSON.parse(newkey));
-
-                }
-                break;
-
-            case "COUNT":
-
-                for(let e of key3){
-                    ;
-                    let comparearray:any=[];
-                    let v=data[e];
-                    // console.log("vvvvvvvvvvvvvvvvv");
-                    // console.log(e);
-
-                    for (let vv of data[e]){
-                        comparearray.push(vv[k2]);
-                    }
-                    // console.log(comparearray);
-                    let count=comparearray.length;
-                    //console.log(max);
-                    let ret:any={};
-                    ret[b]=count;
-                    let newkey=JSON.stringify(ret);
-                    // console.log("ggggggggggggggggg");
-                    // console.log(newkey);
-                    result.push(JSON.parse(newkey));
-
-                }
-                break;
-
-            case "SUM":
-
-                for(let e of key3){
-                    ;
-                    let comparearray:any=[];
-                    let v=data[e];
-                    // console.log("vvvvvvvvvvvvvvvvv");
-                    // console.log(e);
-
-                    for (let vv of data[e]){
-                        comparearray.push(vv[k2]);
-                    }
-                    // console.log(comparearray);
-                    var sum = comparearray.reduce((a:any, b:any) => a + b, 0);
-                    //console.log(max);
-                    let ret:any={};
-                    ret[b]=sum;
-                    let newkey=JSON.stringify(ret);
-                    // console.log("ggggggggggggggggg");
-                    // console.log(newkey);
-                    result.push(JSON.parse(newkey));
-
-                }
-                break;
-
-        }
-
-        for (var i = 0; i < apply_result.length; i++) {
-
-             // if(apply_result[i])
-            // let temp=JSON.parse(apply_result[i]);
-            // console.log("zzzzzzzzzzz");
-            // console.log(temp);
-            var result2 = Object.assign({},apply_result[i], result[i]);
-            apply_result[i]=result2;
-            // console.log(apply_result[i]);
-        }
-
-    }
-    return apply_result;
-
-
-}
-
 
 function geo_helper(room:any)
 {
@@ -747,18 +461,6 @@ function building_tree_helper(node:any,buildingInfo:any,rooms_shortnames:any,
     //return true;
 }
 
-
-
-// function identical(array:any, order:any) {
-//     for(var i = 0; i < array.length - 1; i++) {
-//         if(array[i][order] !== array[i+1][order]) {
-//             return false;
-//         }
-//     }
-//     return true;
-// }
-
-
 function intersect(a:any,b:any) {
     if (a.length == 0) {
         return a;
@@ -797,33 +499,6 @@ function union(a: any, b: any) {
     re = b_after.concat(a);
     return re;
 }
-
-
-
-
-
-
-function groupBy(list:any, gp:any) {
-    var groups:any = {};
-    for (var i = 0; i < list.length; i++) {
-        let newEntry: any = {};
-        gp.forEach(function (k: any) {
-            return newEntry[k] = list[i].hasOwnProperty(k) ? list[i][k] : null;
-        });
-        let group = JSON.stringify(newEntry);
-        //console.log(i,i,i,i,i,i);
-        //console.log(group);
-        if (group in groups) {
-            groups[group].push(list[i]);
-        } else {
-            groups[group] = [list[i]];
-        }
-        //console.log(groups);
-        //console.log(i,i,i,i,i,i);
-    }
-    return groups;
-}
-
 
 
 function helper(key: string, filter: any, coursedata: any[]) {
@@ -886,6 +561,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
                 }
             }
 
+            //var courses: any = coursedata.filter(elem => !result.includes(elem));
             return courses;
 
         case "EQ":
@@ -1026,12 +702,8 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
         }
 
         if (order != null && typeof order === "string") {
-            if (clean_output_keys.indexOf(order) < 0 || c_list.indexOf(order) < 0) {
+            if (clean_output_keys.indexOf(order) < 0 && c_list.indexOf(order) < 0) {
                 return {code: 400, body: {"error": "Invalid query: ORDER"}};
-            }
-            else if (!fs.existsSync("./data/" + order.split("_")[0] + ".dat")) {
-                if (missing.indexOf(order.split("_")[0]) < 0)
-                    missing.push(order.split("_")[0]);
             }
         }
         else if(order != null && typeof order === "object")
@@ -1234,7 +906,6 @@ function validateWhere(target: any, missing: string[], c_list: string[], ids:str
     else
         return return_list[0];
 }
-
 
 function validateTransformation(target:any, groupBy: string[], applyBy: any[],ids: string[])
 {
