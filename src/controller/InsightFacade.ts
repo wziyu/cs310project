@@ -286,7 +286,7 @@ export default class InsightFacade implements IInsightFacade {
             }
 
 
-
+         
 //dui
             let where: any = JSON.parse(JSON.stringify(query))["WHERE"];
             var keys: any = Object.keys(where)[0];
@@ -302,12 +302,12 @@ export default class InsightFacade implements IInsightFacade {
 
             var filtered_data: any = helper(keys, filter, jonj);
 
-            let group: any = JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"]["GROUP"];
+            //let group: any = JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"]["GROUP"];
             let groupData: any[] = [];
-            groupData = groupBy(filtered_data, group);
+            groupData = groupBy(filtered_data, groupByRes);
 
-            let apply: any = JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"]["APPLY"];
-            let apply_result=apply_helper(groupData,apply);
+            //let apply: any = JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"]["APPLY"];
+            let apply_result=apply_helper(groupData,applyBy);
 
 
             let column: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["COLUMNS"];
