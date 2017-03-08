@@ -333,35 +333,35 @@ export default class InsightFacade implements IInsightFacade {
                     let dir=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"];
                     let order=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["keys"]
                     if(dir=="UP"){
-                        for (let o of order) {
-                            if(!identical(retData,o)) {
+                        // for (let o of order) {
+                            // if(!identical(retData,o)) {
                                 retData.sort(function (a: any, b: any) {
-                                    if (a[o] > b[o]){
-                                        return 1;
-                                    }
-                                    else{
-                                        return 0;
-                                    }
+                                    return sortingup(a,b,order);
+                                    // if ((a[o] > b[o])){
+                                    //     return 1;
+                                    // }
+                                    // else if ((a[o] == b[o])){
+                                    //     return 1;
+                                    // }
+                                    // else{
+                                    //     return 0;
+                                    // }
                                 });
-                                break;
-                            }
-                        }
+                                // break;
+                            // }
+                        // }
 
 
                     }
                     else{
                         for (let o of order) {
-                            if(!identical(retData,o)) {
+
                                 retData.sort(function (a: any, b: any) {
-                                    if (a[o] < b[o]){
-                                        return 1;
-                                    }
-                                    else{
-                                        return 0;
-                                    }
-                                });
-                                break;
-                            }
+                                    return sortingdown(a,b,order);
+
+
+
+                            });
 
                         }
 
@@ -403,6 +403,49 @@ export default class InsightFacade implements IInsightFacade {
     }
 }
 
+function sortingup(a:any,b:any,order:any){
+
+    for(var i=0 ; i<order.length;i++) {
+        if ((a[order[i]] > b[order[i]])) {
+            return 1;
+        }
+        else if ((a[order[i]] == b[order[i]])) {
+            if(i!=order.length-1) {
+                continue;
+            }
+            else{
+                return 0;
+            }
+        }
+        else {
+            return 0;
+        }
+
+    }
+
+}
+
+function sortingdown(a:any,b:any,order:any){
+
+    for(var i=0 ; i<order.length;i++) {
+        if ((a[order[i]] < b[order[i]])) {
+            return 1;
+        }
+        else if ((a[order[i]] == b[order[i]])) {
+            if(i!=order.length-1) {
+                continue;
+            }
+            else{
+                return 0;
+            }
+        }
+        else {
+            return 0;
+        }
+
+    }
+
+}
 
 function apply_helper(data:any,apply:any){
 
@@ -449,7 +492,6 @@ function apply_helper(data:any,apply:any){
                     let newkey=JSON.stringify(ret);
                      // console.log(newkey);
                     result.push(JSON.parse(newkey));
-
                 }
                 break;
             case "MIN":
@@ -707,14 +749,14 @@ function building_tree_helper(node:any,buildingInfo:any,rooms_shortnames:any,
 
 
 
-function identical(array:any, order:any) {
-    for(var i = 0; i < array.length - 1; i++) {
-        if(array[i][order] !== array[i+1][order]) {
-            return false;
-        }
-    }
-    return true;
-}
+// function identical(array:any, order:any) {
+//     for(var i = 0; i < array.length - 1; i++) {
+//         if(array[i][order] !== array[i+1][order]) {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
 
 
 function intersect(a:any,b:any) {
