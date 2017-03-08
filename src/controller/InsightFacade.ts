@@ -286,11 +286,10 @@ export default class InsightFacade implements IInsightFacade {
             }
 
 
-         
+
 //dui
             let where: any = JSON.parse(JSON.stringify(query))["WHERE"];
-            var keys: any = Object.keys(where)[0];
-            var filter: any = where[keys];
+
             let json:any;
             if(ids.length > 0)
             {
@@ -299,9 +298,18 @@ export default class InsightFacade implements IInsightFacade {
             }
 
             let jonj = JSON.parse(json);
+            var filtered_data: any;
+            if(Object.keys(where).length === 0) {
+                filtered_data=jonj;
 
-            var filtered_data: any = helper(keys, filter, jonj);
+            }
+            else {
+                var keys: any = Object.keys(where)[0];
 
+                var filter: any = where[keys];
+
+                filtered_data = helper(keys, filter, jonj);
+            }
             //let group: any = JSON.parse(JSON.stringify(query))["TRANSFORMATIONS"]["GROUP"];
             let groupData: any[] = [];
             groupData = groupBy(filtered_data, groupByRes);
