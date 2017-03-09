@@ -292,8 +292,6 @@ export default class InsightFacade implements IInsightFacade {
                 }
             }
 
-
-
 //dui
             let where: any = JSON.parse(JSON.stringify(query))["WHERE"];
             let json:any;
@@ -314,34 +312,53 @@ export default class InsightFacade implements IInsightFacade {
                 filtered_data = helper(keys, filter, jonj);
             }
 
-            var groupData:any;
-            if(Object.keys(groupByRes).length === 0) {
-                groupData=filtered_data;
+
+
+            var final_result:any;
+
+            if(Object.keys(groupByRes).length === 0){
+                final_result=filtered_data;
             }
-            else {
+            else{
+                var groupData:any;
                 groupData = groupBy_helper(filtered_data, groupByRes);
+                var apply_result:any;
+                if(Object.keys(applyBy).length === 0) {
+                    let key3 = Object.keys(groupData);
+                    apply_result = JSON.parse(JSON.stringify(key3));
+
+                    ;for (var i = 0; i < apply_result.length; i++) {
+                        let temp=JSON.parse(apply_result[i]);
+                        apply_result[i]=temp;
+                    }
+                }
+                else {
+                    apply_result=apply_helper(groupData,applyBy);
+
+                }
+                final_result=apply_result;
             }
 
-            var apply_result:any;
-            if(Object.keys(applyBy).length === 0) {
-                apply_result=groupData;
-            }
-            else {
-                apply_result=apply_helper(groupData,applyBy);
-            }
+
 
 
 
             let column: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["COLUMNS"];
             let retData: any[] = [];
 
-            for (let v of apply_result) {
+
+
+            for (let v of final_result) {
+
                 let newEntry: any = {};
                 column.forEach(function (k: any) {
                     return newEntry[k] = v.hasOwnProperty(k) ? v[k] : null;
                 });
                 retData.push(newEntry);
             }
+
+
+
             if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
                 if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"])) {
                     let dir=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"];
@@ -363,6 +380,7 @@ export default class InsightFacade implements IInsightFacade {
                     }
                 }
                 else{
+
                     let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                     retData.sort(function (a: any, b: any) {
                         if (a[order] > b[order]){
@@ -515,15 +533,20 @@ function apply_helper(data:any,apply:any){
             case "COUNT":
 
                 for(let e of key3){
-                
-                    let comparearray:any=[];
+
                     let v=data[e];
+                    var store:any=[];
+                    let cont:number=0;
+
                     for (let vv of data[e]){
-                        comparearray.push(vv[k2]);
+                        if (store.indexOf(vv[k2])==-1) {
+                            cont++;
+                            store.push(vv[k2]);
+                        }
                     }
-                    let count=comparearray.length;
+
                     let ret:any={};
-                    ret[b]=count;
+                    ret[b]=cont;
                     let newkey=JSON.stringify(ret);
                     result.push(JSON.parse(newkey));
 
@@ -533,7 +556,7 @@ function apply_helper(data:any,apply:any){
             case "SUM":
 
                 for(let e of key3){
-                
+
                     let comparearray:any=[];
                     let v=data[e];
                     for (let vv of data[e]){
@@ -1199,7 +1222,7 @@ function validateTransformation(target:any, groupBy: string[], applyBy: any[],id
         {
             for(let s of group)
             {
-                    groupBy.push(s);
+                groupBy.push(s);
             }
 
         }
