@@ -261,6 +261,13 @@ export default class InsightFacade implements IInsightFacade {
                     let val = k[0];
                     apply_keys.push(val);
                 }
+                for(let g of groupByRes)
+                {
+                    if(apply_keys.indexOf(g)>=0)
+                        return reject({code: 400, body: {"error": "Invalid query: GROUP cannot have apply key"}});
+                    else if(g.split("_").length === 2 && ids.indexOf(g.split("_")[0])<0)
+                        return reject({code: 400, body: {"error": "Invalid query: Cannot perform on 2 sets"}});
+                }
                 for(let c of c_list)
                 {
                     if(groupByRes.indexOf(c)<0 && apply_keys.indexOf(c)<0)
@@ -289,8 +296,6 @@ export default class InsightFacade implements IInsightFacade {
 
 //dui
             let where: any = JSON.parse(JSON.stringify(query))["WHERE"];
-            console.log(applyBy);
-            console.log(groupByRes);
             let json:any;
             if(ids.length > 0)
             {
@@ -342,31 +347,30 @@ export default class InsightFacade implements IInsightFacade {
                     let dir=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"];
                     let order=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["keys"]
                     if(dir=="UP"){
-                                retData.sort(function (a: any, b: any) {
-                                    return sortingup(a,b,order);     
-                                });
+                        retData.sort(function (a: any, b: any) {
+                            return sortingup(a,b,order);
+                        });
 
                     }
                     else{
                         for (let o of order) {
 
-                                retData.sort(function (a: any, b: any) {
-                                    return sortingdown(a,b,order);
+                            retData.sort(function (a: any, b: any) {
+                                return sortingdown(a,b,order);
                             });
 
                         }
                     }
                 }
                 else{
-                    console.log("qqqqqqqqqqqqqqqqqqqqq");
                     let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                     retData.sort(function (a: any, b: any) {
-                            if (a[order] > b[order]){
-                                return 1;
-                            }
-                            else{
-                                return 0;
-                            }
+                        if (a[order] > b[order]){
+                            return 1;
+                        }
+                        else{
+                            return 0;
+                        }
                     });
                 }
             }
@@ -449,10 +453,10 @@ function apply_helper(data:any,apply:any){
 
                 for(let e of key3){
                     let comparearray:any=[];
-                        let v=data[e];
-                        for (let vv of data[e]){
-                            comparearray.push(vv[k2]);
-                        }
+                    let v=data[e];
+                    for (let vv of data[e]){
+                        comparearray.push(vv[k2]);
+                    }
                     let max=Math.max.apply(null,comparearray);
                     let ret:any={};
                     ret[b]=max;
@@ -470,6 +474,7 @@ function apply_helper(data:any,apply:any){
                     let min=Math.min.apply(null,comparearray);
                     let ret:any={};
                     ret[b]=min;
+                    let newkey=JSON.stringify(ret);
                     result.push(JSON.parse(newkey));
 
                 }
@@ -488,7 +493,7 @@ function apply_helper(data:any,apply:any){
                     for (let i:number=0; i < comparearray.length; i++) {
                         comparearray[i] *= 10;
                         comparearray[i] = Number(comparearray[i].toFixed(0))
-                     }
+                    }
                     let sum:number=0;
                     for (let k of comparearray){
                         sum=sum+k;
@@ -906,40 +911,12 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
             }
 
         }
-        let clean_output_keys:string[] = [];
         if(ids.length === 1 && ids[0] === "courses") {
-            clean_output_keys =
-                [
-                    'courses_dept',
-                    'courses_id',
-                    'courses_avg',
-                    'courses_instructor',
-                    'courses_title',
-                    'courses_pass',
-                    'courses_fail',
-                    'courses_audit',
-                    'courses_uuid',
-                    'courses_year'
-                ];
             if(!fs.existsSync("./data/" + ids[0] + ".dat"))
                 if (missing.indexOf(ids[0]) < 0)
                     missing.push(ids[0]);
         }
         else if(ids.length === 1 && ids[0] === "rooms") {
-            clean_output_keys =
-                [
-                    'rooms_fullname',
-                    'rooms_shortname',
-                    'rooms_number',
-                    'rooms_name',
-                    'rooms_lat',
-                    'rooms_lon',
-                    'rooms_seats',
-                    'rooms_type',
-                    'rooms_address',
-                    'rooms_furniture',
-                    'rooms_href'
-                ];
             if(!fs.existsSync("./data/" + ids[0] + ".dat"))
                 if (missing.indexOf(ids[0]) < 0)
                     missing.push(ids[0]);
@@ -974,12 +951,56 @@ function validateOptions(options: any, missing: string[], c_list: string[], ids:
             }
         }
 
+        let clean_output_keys:string[] = [];
+        if(ids.length === 1 && ids[0] === "courses") {
+            clean_output_keys =
+                [
+                    'dept',
+                    'id',
+                    'avg',
+                    'instructor',
+                    'title',
+                    'pass',
+                    'fail',
+                    'audit',
+                    'uuid',
+                    'year'
+                ];
+            if (!fs.existsSync("./data/" + ids[0] + ".dat"))
+                if (missing.indexOf(ids[0]) < 0)
+                    missing.push(ids[0]);
+        }
+        else if(ids.length === 1 && ids[0] === "rooms")
+        {
+            clean_output_keys =
+                [
+                    'fullname',
+                    'shortname',
+                    'address',
+                    'number',
+                    'name',
+                    'lat',
+                    'lon',
+                    'seats',
+                    'type',
+                    'furniture',
+                    'href'
+                ];
+            if(!fs.existsSync("./data/" + ids[0] + ".dat"))
+                if (missing.indexOf(ids[0]) < 0)
+                    missing.push(ids[0]);
+        }
+        else if(ids.length > 1 && missing.length < 1)
+        {
+            return {code: 400, body: {"error": "Invalid query: Too much data sets"}};
+        }
+
         if (c_list.length <= 0)
             return {code: 400, body: {"error": "Invalid query: COLUMNS"}};
-        else {
+        else{
             for(let c of c_list)
             {
-                if(clean_output_keys.indexOf(c) < 0)
+                if(c.split("_").length === 2 && clean_output_keys.indexOf(c.split("_")[1])<0)
                     return {code: 400, body: {"error": "Invalid query: COLUMNS"}};
             }
         }
@@ -1178,10 +1199,6 @@ function validateTransformation(target:any, groupBy: string[], applyBy: any[],id
         {
             for(let s of group)
             {
-                let id = s.split("_")[0];
-                if (ids.indexOf(id) < 0)
-                    return {code: 400, body: {"error": "Invalid query: Cannot perform on 2 sets"}};
-                else
                     groupBy.push(s);
             }
 
