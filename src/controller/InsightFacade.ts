@@ -301,16 +301,20 @@ export default class InsightFacade implements IInsightFacade {
                     json = fs.readFileSync("./data/"+ ids[0] + ".dat").toString();
             }
 
+
             let jonj = JSON.parse(json);
             var filtered_data: any;
             if(Object.keys(where).length === 0) {
+
                 filtered_data=jonj;
             }
             else {
+
                 var keys: any = Object.keys(where)[0];
                 var filter: any = where[keys];
                 filtered_data = helper(keys, filter, jonj);
             }
+
 
 
 
@@ -358,7 +362,6 @@ export default class InsightFacade implements IInsightFacade {
             }
 
 
-
             if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
                 if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"])) {
                     let dir=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"];
@@ -383,12 +386,18 @@ export default class InsightFacade implements IInsightFacade {
 
                     let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                     retData.sort(function (a: any, b: any) {
-                        if (a[order] > b[order]){
+                        console.log((order));
+                        if ((a[order] > b[order])) {
                             return 1;
                         }
-                        else{
-                            return 0;
+
+                        else {
+                            return -1;
                         }
+                        // if (typeof a[order] === "number") {
+                        //     return a[order] - b[order];
+                        // }
+                        // return a[order].toString().localeCompare(b[order].toString());
                     });
                 }
             }
@@ -406,20 +415,21 @@ export default class InsightFacade implements IInsightFacade {
 function sortingup(a:any,b:any,order:any){
 
     for(var i=0 ; i<order.length;i++) {
-        if ((a[order[i]] > b[order[i]])) {
-            return 1;
-        }
-        else if ((a[order[i]] == b[order[i]])) {
-            if(i!=order.length-1) {
-                continue;
+
+            if ((a[order[i]] > b[order[i]])) {
+                return 1;
             }
-            else{
-                return 0;
+            else if ((a[order[i]] == b[order[i]])) {
+                if (i != order.length - 1) {
+                    continue;
+                }
+                else {
+                    return 0;
+                }
             }
-        }
-        else {
-            return 0;
-        }
+            else {
+                return -1;
+            }
 
     }
 
@@ -440,7 +450,7 @@ function sortingdown(a:any,b:any,order:any){
             }
         }
         else {
-            return 0;
+            return -1;
         }
 
     }
