@@ -515,7 +515,7 @@ function apply_helper(data:any,apply:any){
             case "COUNT":
 
                 for(let e of key3){
-                    ;
+                
                     let comparearray:any=[];
                     let v=data[e];
                     for (let vv of data[e]){
@@ -533,7 +533,7 @@ function apply_helper(data:any,apply:any){
             case "SUM":
 
                 for(let e of key3){
-                    ;
+                
                     let comparearray:any=[];
                     let v=data[e];
                     for (let vv of data[e]){
