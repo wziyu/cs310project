@@ -393,9 +393,6 @@ function sort(a: any, b: any, order: any): number {
     if (a[order] > b[order]){
         return 1;
     }
-    if(a[order] < b[order]){
-        return -1;
-    }
     return 0;
 }
 
@@ -414,7 +411,7 @@ function sortingup(a:any,b:any,order:any){
             }
         }
         else {
-            return -1;
+            return 0;
         }
     }
 
@@ -435,7 +432,7 @@ function sortingdown(a:any,b:any,order:any){
             }
         }
         else {
-            return -1;
+            return 0;
         }
 
     }
