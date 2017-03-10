@@ -372,12 +372,15 @@ export default class InsightFacade implements IInsightFacade {
                 }
                 else{
 
-                    let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
+                    let order: string = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                     retData.sort(function (a: any, b: any) {
-                        if (typeof a[order] === "number") {
-                            return a[order] - b[order];
+                        if (a[order] > b[order]){
+                            return 1;
                         }
-                        return a[order].toString().localeCompare(b[order].toString());
+                        if(a[order] < b[order]){
+                            return -1;
+                        }
+                        return 0;
                     });
                 }
             }
@@ -394,11 +397,11 @@ export default class InsightFacade implements IInsightFacade {
 
 function sortingup(a:any,b:any,order:any){
 
-    for(var i=0 ; i<order.length;i++) {
+    for(let i:number = 0 ; i<order.length;i++) {
         if ((a[order[i]] > b[order[i]])) {
             return 1;
         }
-        else if ((a[order[i]] == b[order[i]])) {
+        else if ((a[order[i]] === b[order[i]])) {
             if(i!=order.length-1) {
                 continue;
             }
@@ -409,18 +412,17 @@ function sortingup(a:any,b:any,order:any){
         else {
             return -1;
         }
-
     }
 
 }
 
 function sortingdown(a:any,b:any,order:any){
 
-    for(var i=0 ; i<order.length;i++) {
+    for(let i:number = 0 ; i<order.length;i++) {
         if ((a[order[i]] < b[order[i]])) {
             return 1;
         }
-        else if ((a[order[i]] == b[order[i]])) {
+        else if ((a[order[i]] === b[order[i]])) {
             if(i!=order.length-1) {
                 continue;
             }
