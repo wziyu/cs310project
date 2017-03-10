@@ -359,7 +359,7 @@ export default class InsightFacade implements IInsightFacade {
             if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
                 if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"])) {
                     let dir=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"];
-                    let order=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["keys"]
+                    let order=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["keys"];
                     if(dir=="UP"){
                         retData.sort(function (a: any, b: any) {
                             return sortingup(a,b,order);
@@ -367,13 +367,9 @@ export default class InsightFacade implements IInsightFacade {
 
                     }
                     else{
-                        for (let o of order) {
-
-                            retData.sort(function (a: any, b: any) {
-                                return sortingdown(a,b,order);
-                            });
-
-                        }
+                        retData.sort(function (a: any, b: any) {
+                            return sortingdown(a,b,order);
+                        });
                     }
                 }
                 else{
