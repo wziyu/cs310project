@@ -781,8 +781,6 @@ function helper(key: string, filter: any, coursedata: any[]) {
             }
             var last: any = [];
 
-            let i:number=0;
-
             if(results.length>=1){
                 last=results[0];
             }
@@ -817,7 +815,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
             var result = helper(a, b, coursedata);
 
             var courses: any = [];
-            var numbers: string[] = [];
+            var numbers: any[] = [];
 
             for (let n of result) {
                 numbers.push(n['courses_uuid']||n['rooms_name'])
