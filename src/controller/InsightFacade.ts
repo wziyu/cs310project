@@ -75,7 +75,6 @@ export default class InsightFacade implements IInsightFacade {
                                         newo[clean_output_keys[i]] = r[clean_input_keys[i]].toString();
                                     else
                                         newo[clean_output_keys[i]] = r[clean_input_keys[i]];
-
                                 }
                                 processed_results.push(newo);
                             }
@@ -316,7 +315,6 @@ export default class InsightFacade implements IInsightFacade {
             }
 
 
-
             var final_result:any;
 
             if(Object.keys(groupByRes).length === 0){
@@ -379,12 +377,12 @@ export default class InsightFacade implements IInsightFacade {
                         if (a[order] > b[order]){
                             return 1;
                         }
-                        else if (a[order] == b[order]){
+                        else if(a[order] === b[order])
+                        {
                             return 0;
                         }
-                        else{
+                        else
                             return -1;
-                        }
                     });
                 }
             }
@@ -731,6 +729,9 @@ function intersect(a:any,b:any) {
     return re;
 }
 
+
+
+
 function union(a: any, b: any) {
     if (a.length == 0) {
         return b;
@@ -746,6 +747,11 @@ function union(a: any, b: any) {
     re = b_after.concat(a);
     return re;
 }
+
+
+
+
+
 
 function groupBy_helper(list:any, gp:any) {
     var groups:any = {};
@@ -764,6 +770,8 @@ function groupBy_helper(list:any, gp:any) {
     return groups;
 }
 
+
+
 function helper(key: string, filter: any, coursedata: any[]) {
     switch (key) {
         case "AND":
@@ -776,6 +784,8 @@ function helper(key: string, filter: any, coursedata: any[]) {
                 results.push(result);
             }
             var last: any = [];
+
+            let i:number=0;
 
             if(results.length>=1){
                 last=results[0];
@@ -811,7 +821,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
             var result = helper(a, b, coursedata);
 
             var courses: any = [];
-            var numbers: any[] = [];
+            var numbers: any = [];
 
             for (let n of result) {
                 numbers.push(n['courses_uuid']||n['rooms_name'])
