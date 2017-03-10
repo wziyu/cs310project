@@ -71,6 +71,8 @@ export default class InsightFacade implements IInsightFacade {
                                         newo[clean_output_keys[i]] = 1900;
                                     else if(clean_input_keys[i] === "Year" && r['Section'] !== "overall")
                                         newo[clean_output_keys[i]] = +r[clean_input_keys[i]];
+                                    else if(clean_input_keys[i] === "id")
+                                        newo[clean_output_keys[i]] = r[clean_input_keys[i]].toString();
                                     else
                                         newo[clean_output_keys[i]] = r[clean_input_keys[i]];
 
@@ -381,8 +383,11 @@ export default class InsightFacade implements IInsightFacade {
                         if (a[order] > b[order]){
                             return 1;
                         }
-                        else{
+                        else if (a[order] == b[order]){
                             return 0;
+                        }
+                        else{
+                            return -1;
                         }
                     });
                 }
@@ -413,7 +418,7 @@ function sortingup(a:any,b:any,order:any){
             }
         }
         else {
-            return 0;
+            return -1;
         }
 
     }
@@ -435,7 +440,7 @@ function sortingdown(a:any,b:any,order:any){
             }
         }
         else {
-            return 0;
+            return -1;
         }
 
     }
