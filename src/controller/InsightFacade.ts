@@ -330,7 +330,7 @@ export default class InsightFacade implements IInsightFacade {
                     let key3 = Object.keys(groupData);
                     apply_result = JSON.parse(JSON.stringify(key3));
 
-                    ;for (var i = 0; i < apply_result.length; i++) {
+                    for (var i = 0; i < apply_result.length; i++) {
                         let temp=JSON.parse(apply_result[i]);
                         apply_result[i]=temp;
                     }
@@ -414,7 +414,7 @@ function sortingup(a:any,b:any,order:any){
             }
         }
         else {
-            return -1;
+            return 0;
         }
 
     }
@@ -436,7 +436,7 @@ function sortingdown(a:any,b:any,order:any){
             }
         }
         else {
-            return -1;
+            return 0;
         }
 
     }
