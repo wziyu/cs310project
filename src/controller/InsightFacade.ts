@@ -377,9 +377,11 @@ export default class InsightFacade implements IInsightFacade {
                         if (a[order] > b[order]){
                             return 1;
                         }
-                        else{
-                            return 0;
+                        else if(a[order] < b[order]){
+                            return -1;
                         }
+                        else
+                            return 0;
                     });
                 }
             }
@@ -409,7 +411,7 @@ function sortingup(a:any,b:any,order:any){
             }
         }
         else {
-            return 0;
+            return -1;
         }
 
     }
@@ -431,7 +433,7 @@ function sortingdown(a:any,b:any,order:any){
             }
         }
         else {
-            return 0;
+            return -1;
         }
 
     }
