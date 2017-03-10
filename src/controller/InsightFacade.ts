@@ -71,8 +71,6 @@ export default class InsightFacade implements IInsightFacade {
                                         newo[clean_output_keys[i]] = 1900;
                                     else if(clean_input_keys[i] === "Year" && r['Section'] !== "overall")
                                         newo[clean_output_keys[i]] = +r[clean_input_keys[i]];
-                                    else if(clean_input_keys[i] === "id")
-                                        newo[clean_output_keys[i]] = r[clean_input_keys[i]].toString();
                                     else
                                         newo[clean_output_keys[i]] = r[clean_input_keys[i]];
 
@@ -277,7 +275,7 @@ export default class InsightFacade implements IInsightFacade {
                         return reject({code: 400, body: {"error": "Invalid query: All columns should be in group or apply"}});
                 }
             }
-
+            //console.log("passed transformation test");
             if (response1 !== null) {
                 return reject(response1);
             }
@@ -285,7 +283,7 @@ export default class InsightFacade implements IInsightFacade {
                 return reject({code: 424, body: {"missing":missing}});
             }
             else {
-
+                //console.log("passed option test");
                 let response2 = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list, ids);
                 if (missing.length > 0) {
                     return reject({code: 424, body: missing});
