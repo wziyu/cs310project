@@ -71,7 +71,7 @@ describe("InsightFacadeSpec", function () {
                 .put('/dataset/rooms')
                 .attach("body", zipdata, "rooms.zip")
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -88,7 +88,7 @@ describe("InsightFacadeSpec", function () {
                 .put('/dataset/courses')
                 .attach("body", zipdata, "courses.zip")
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -117,7 +117,7 @@ describe("InsightFacadeSpec", function () {
                 .post('/query')
                 .send(query)
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -179,7 +179,7 @@ describe("InsightFacadeSpec", function () {
                 .post('/query')
                 .send(query)
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -220,7 +220,7 @@ describe("InsightFacadeSpec", function () {
                 .post('/query')
                 .send(query)
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -271,7 +271,7 @@ describe("InsightFacadeSpec", function () {
                 .post('/query')
                 .send(query)
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -316,7 +316,7 @@ describe("InsightFacadeSpec", function () {
                 .post('/query')
                 .send(query)
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -360,7 +360,7 @@ describe("InsightFacadeSpec", function () {
                 .post('/query')
                 .send(query)
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -390,7 +390,7 @@ describe("InsightFacadeSpec", function () {
                     }
                 })
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -420,7 +420,7 @@ describe("InsightFacadeSpec", function () {
                     }
                 })
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -459,7 +459,7 @@ describe("InsightFacadeSpec", function () {
                     }
                 })
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -500,7 +500,7 @@ describe("InsightFacadeSpec", function () {
                     }
                 })
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -535,7 +535,7 @@ describe("InsightFacadeSpec", function () {
                     }
                 })
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -580,7 +580,7 @@ describe("InsightFacadeSpec", function () {
                     }
                 })
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -616,7 +616,7 @@ describe("InsightFacadeSpec", function () {
                     }
                 })
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -661,7 +661,7 @@ describe("InsightFacadeSpec", function () {
                         "FORM": "TABLE"
                     }
                 }).end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -694,7 +694,7 @@ describe("InsightFacadeSpec", function () {
                         "FORM": "TABLE"
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -742,7 +742,7 @@ describe("InsightFacadeSpec", function () {
                         "FORM":"TABLE"
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -771,7 +771,7 @@ describe("InsightFacadeSpec", function () {
                         "FORM":"TABLE"
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -814,7 +814,7 @@ describe("InsightFacadeSpec", function () {
                         }]
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -845,7 +845,7 @@ describe("InsightFacadeSpec", function () {
                         "FORM":"TABLE"
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -876,7 +876,7 @@ describe("InsightFacadeSpec", function () {
                         "FORM":"TABLE"
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -920,7 +920,7 @@ describe("InsightFacadeSpec", function () {
                         "FORM": "TABLE"
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -956,7 +956,7 @@ describe("InsightFacadeSpec", function () {
                         "FORM": "TABLE"
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -984,7 +984,7 @@ describe("InsightFacadeSpec", function () {
                         "FORM": "TABLE"
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -1049,7 +1049,7 @@ describe("InsightFacadeSpec", function () {
                         ]
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -1081,7 +1081,7 @@ describe("InsightFacadeSpec", function () {
                         }]
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -1114,7 +1114,7 @@ describe("InsightFacadeSpec", function () {
                         }]
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -1147,7 +1147,72 @@ describe("InsightFacadeSpec", function () {
                         }]
                     }
                 }).end(function (err: any, res: any) {
-                console.log(res.body);
+                //console.log(res.body);
+                server.stop().then();
+                done();
+            });
+        }).catch(function (err) {
+            Log.test('Error: ' + err);
+            expect.fail();
+        });
+    });
+
+    it("Testing server: POST-22 test for albert", function (done) {
+        server.start().then(function () {
+            chai.request("http://localhost:4321")
+                .post('/query')
+                .send({
+                    "WHERE": {},
+                    "OPTIONS": {
+                        "COLUMNS": [
+                            "courses_dept",
+                            "max",
+                            "avg",
+                            "min",
+                            "count",
+                            "sum"
+                        ],
+                        "ORDER": {
+                            "dir": "DOWN",
+                            "keys": ["courses_dept",
+                                "max",
+                                "avg",
+                                "min",
+                                "count",
+                                "sum",
+                                "avg"]
+                        },
+                        "FORM": "TABLE"
+                    },
+                    "TRANSFORMATIONS": {
+                        "GROUP": [
+                            "courses_dept",
+                            "courses_id"],
+                        "APPLY": [
+                            {
+                                "sum": {
+                                    "SUM": "courses_pass"
+                                }
+                            }, {
+                                "max": {
+                                    "MAX": "courses_pass"
+                                }
+                            }, {
+                                "min": {
+                                    "MIN": "courses_pass"
+                                }
+                            }, {
+                                "count": {
+                                    "COUNT": "courses_uuid"
+                                }
+                            }, {
+                                "avg": {
+                                    "AVG": "courses_pass"
+                                }
+                            }]
+                    }
+                }).end(function (err: any, res: any) {
+                //console.log(res.body);
                 server.stop().then();
                 done();
             });
@@ -1162,7 +1227,7 @@ describe("InsightFacadeSpec", function () {
             chai.request("http://localhost:4321")
                 .del('/dataset/rooms')
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
@@ -1177,7 +1242,7 @@ describe("InsightFacadeSpec", function () {
             chai.request("http://localhost:4321")
                 .del('/dataset/courses')
                 .end(function (err: any, res: any) {
-                    console.log(res.body);
+                    //console.log(res.body);
                     server.stop().then();
                     done();
                 });
