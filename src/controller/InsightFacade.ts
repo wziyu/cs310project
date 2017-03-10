@@ -277,7 +277,7 @@ export default class InsightFacade implements IInsightFacade {
                         return reject({code: 400, body: {"error": "Invalid query: All columns should be in group or apply"}});
                 }
             }
-            //console.log("passed transformation test");
+
             if (response1 !== null) {
                 return reject(response1);
             }
@@ -285,7 +285,7 @@ export default class InsightFacade implements IInsightFacade {
                 return reject({code: 424, body: {"missing":missing}});
             }
             else {
-                //console.log("passed option test");
+
                 let response2 = validateWhere(JSON.parse(JSON.stringify(query))["WHERE"], missing, c_list, ids);
                 if (missing.length > 0) {
                     return reject({code: 424, body: missing});
