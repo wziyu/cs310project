@@ -370,16 +370,14 @@ export default class InsightFacade implements IInsightFacade {
                         });
                     }
                 }
-                 else{
+                else{
 
                     let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                     retData.sort(function (a: any, b: any) {
-                        if (a[order] > b[order]){
-                            return 1;
+                        if (typeof a[order] === "number") {
+                            return a[order] - b[order];
                         }
-                        else{
-                            return 0;
-                        }
+                        return a[order].toString().localeCompare(b[order].toString());
                     });
                 }
             }
@@ -409,7 +407,7 @@ function sortingup(a:any,b:any,order:any){
             }
         }
         else {
-            return 0;
+            return -1;
         }
 
     }
@@ -431,7 +429,7 @@ function sortingdown(a:any,b:any,order:any){
             }
         }
         else {
-            return 0;
+            return -1;
         }
 
     }
