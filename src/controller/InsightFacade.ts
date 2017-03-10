@@ -396,11 +396,11 @@ export default class InsightFacade implements IInsightFacade {
 
 function sortingup(a:any,b:any,order:any){
 
-    for(let i:number = 0 ; i<order.length;i++) {
+    for(var i=0 ; i<order.length;i++) {
         if ((a[order[i]] > b[order[i]])) {
             return 1;
         }
-        else if ((a[order[i]] === b[order[i]])) {
+        else if ((a[order[i]] == b[order[i]])) {
             if(i!=order.length-1) {
                 continue;
             }
@@ -409,19 +409,20 @@ function sortingup(a:any,b:any,order:any){
             }
         }
         else {
-            return -1;
+            return 0;
         }
+
     }
 
 }
 
 function sortingdown(a:any,b:any,order:any){
 
-    for(let i:number = 0 ; i<order.length;i++) {
+    for(var i=0 ; i<order.length;i++) {
         if ((a[order[i]] < b[order[i]])) {
             return 1;
         }
-        else if ((a[order[i]] === b[order[i]])) {
+        else if ((a[order[i]] == b[order[i]])) {
             if(i!=order.length-1) {
                 continue;
             }
@@ -430,7 +431,7 @@ function sortingdown(a:any,b:any,order:any){
             }
         }
         else {
-            return -1;
+            return 0;
         }
 
     }
