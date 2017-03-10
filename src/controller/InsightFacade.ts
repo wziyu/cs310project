@@ -370,19 +370,16 @@ export default class InsightFacade implements IInsightFacade {
                         });
                     }
                 }
-                else{
+                 else{
 
                     let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                     retData.sort(function (a: any, b: any) {
                         if (a[order] > b[order]){
                             return 1;
                         }
-                        else if(a[order] === b[order])
-                        {
+                        else{
                             return 0;
                         }
-                        else
-                            return -1;
                     });
                 }
             }
@@ -412,7 +409,7 @@ function sortingup(a:any,b:any,order:any){
             }
         }
         else {
-            return -1;
+            return 0;
         }
 
     }
@@ -434,7 +431,7 @@ function sortingdown(a:any,b:any,order:any){
             }
         }
         else {
-            return -1;
+            return 0;
         }
 
     }
