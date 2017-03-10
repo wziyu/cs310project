@@ -374,7 +374,12 @@ export default class InsightFacade implements IInsightFacade {
 
                     let order: string = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                     retData.sort(function (a: any, b: any) {
-                        return sort(a,b,order);
+                        if (a[order] > b[order]){
+                            return 1;
+                        }
+                        else{
+                            return 0;
+                        }
                     });
                 }
             }
@@ -387,13 +392,6 @@ export default class InsightFacade implements IInsightFacade {
             return resolve({code: 200, body: re});
         });
     }
-}
-
-function sort(a: any, b: any, order: any): number {
-    if (a[order] > b[order]){
-        return 1;
-    }
-    return 0;
 }
 
 function sortingup(a:any,b:any,order:any){
@@ -411,7 +409,7 @@ function sortingup(a:any,b:any,order:any){
             }
         }
         else {
-            return 0;
+            return -1;
         }
     }
 
@@ -432,7 +430,7 @@ function sortingdown(a:any,b:any,order:any){
             }
         }
         else {
-            return 0;
+            return -1;
         }
 
     }
