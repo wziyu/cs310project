@@ -315,6 +315,7 @@ export default class InsightFacade implements IInsightFacade {
             }
 
 
+
             var final_result:any;
 
             if(Object.keys(groupByRes).length === 0){
@@ -352,12 +353,10 @@ export default class InsightFacade implements IInsightFacade {
                 retData.push(newEntry);
             }
 
-
-
             if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
                 if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"])) {
                     let dir=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["dir"];
-                    let order=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["keys"];
+                    let order=JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"]["keys"]
                     if(dir=="UP"){
                         retData.sort(function (a: any, b: any) {
                             return sortingup(a,b,order);
@@ -365,14 +364,14 @@ export default class InsightFacade implements IInsightFacade {
 
                     }
                     else{
-                        retData.sort(function (a: any, b: any) {
-                            return sortingdown(a,b,order);
-                        });
+                            retData.sort(function (a: any, b: any) {
+                                return sortingdown(a,b,order);
+                            });
                     }
                 }
                 else{
 
-                    let order: string = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
+                    let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                     retData.sort(function (a: any, b: any) {
                         if (a[order] > b[order]){
                             return 1;
@@ -412,6 +411,7 @@ function sortingup(a:any,b:any,order:any){
         }
         else {
             return -1;
+
         }
 
     }
@@ -434,6 +434,7 @@ function sortingdown(a:any,b:any,order:any){
         }
         else {
             return -1;
+
         }
 
     }
@@ -445,7 +446,7 @@ function apply_helper(data:any,apply:any){
     let key3 = Object.keys(data);
     var apply_result = JSON.parse(JSON.stringify(key3));
 
-    ;for (var i = 0; i < apply_result.length; i++) {
+    for (var i = 0; i < apply_result.length; i++) {
         let temp=JSON.parse(apply_result[i]);
         apply_result[i]=temp;
     }
@@ -513,7 +514,7 @@ function apply_helper(data:any,apply:any){
                     let avg:number = sum / (comparearray.length);
 
                     avg=avg/10;
-                    let res:number = Number(avg.toFixed(2))
+                    let res:number = Number(avg.toFixed(2));
                     let ret:any={};
                     ret[b]=res;
                     let newkey=JSON.stringify(ret);
@@ -712,14 +713,14 @@ function intersect(a:any,b:any) {
     if (a.length == 0) {
         return a;
     }
-    var re:any[] = [];
-    var actualTags = a.map(function (obj: any) {
+    let re:any[] = [];
+    let actualTags = a.map(function (obj: any) {
         return (obj.courses_uuid||obj.rooms_name);
     });
+    //infinite loop here
+    for (let bb of b) {
 
-    for (var bb of b) {
-
-        if ((actualTags.indexOf(bb.courses_uuid) != -1)||(actualTags.indexOf(bb.rooms_name) != -1)) {
+        if ((actualTags.indexOf(bb.courses_uuid) >= 0)||(actualTags.indexOf(bb.rooms_name) >= 0)) {
             re.push(bb);
 
         }
@@ -727,9 +728,6 @@ function intersect(a:any,b:any) {
     }
     return re;
 }
-
-
-
 
 function union(a: any, b: any) {
     if (a.length == 0) {
@@ -746,11 +744,6 @@ function union(a: any, b: any) {
     re = b_after.concat(a);
     return re;
 }
-
-
-
-
-
 
 function groupBy_helper(list:any, gp:any) {
     var groups:any = {};
@@ -769,8 +762,6 @@ function groupBy_helper(list:any, gp:any) {
     return groups;
 }
 
-
-
 function helper(key: string, filter: any, coursedata: any[]) {
     switch (key) {
         case "AND":
@@ -783,8 +774,6 @@ function helper(key: string, filter: any, coursedata: any[]) {
                 results.push(result);
             }
             var last: any = [];
-
-            let i:number=0;
 
             if(results.length>=1){
                 last=results[0];
@@ -814,6 +803,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
                 last = union(last, r);
             }
             return last;
+
         case "NOT":
             var a = Object.keys(filter)[0];
             var b = filter[a];
@@ -823,14 +813,16 @@ function helper(key: string, filter: any, coursedata: any[]) {
             var numbers: any = [];
 
             for (let n of result) {
-                numbers.push(n['courses_uuid']||n['rooms_name'])
+                numbers.push(n['courses_uuid']||n['rooms_name']);
             }
+            console.log("after 1st loop");
+            //infinite loop here
             for(let v of coursedata){
-                if((numbers.indexOf(v['courses_uuid']) == -1)&&(numbers.indexOf(v['rooms_name']) == -1)){
+                if((numbers.indexOf(v['courses_uuid']) < 0 )&&(numbers.indexOf(v['rooms_name']) < 0)){
                     courses.push(v);
                 }
             }
-
+            console.log("after 2nd loop");
             return courses;
 
         case "EQ":
