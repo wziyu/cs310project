@@ -71,8 +71,11 @@ export default class InsightFacade implements IInsightFacade {
                                         newo[clean_output_keys[i]] = 1900;
                                     else if(clean_input_keys[i] === "Year" && r['Section'] !== "overall")
                                         newo[clean_output_keys[i]] = +r[clean_input_keys[i]];
+                                    else if(clean_input_keys[i] === "id")
+                                        newo[clean_output_keys[i]] = r[clean_input_keys[i]].toString();
                                     else
                                         newo[clean_output_keys[i]] = r[clean_input_keys[i]];
+
                                 }
                                 processed_results.push(newo);
                             }
@@ -301,20 +304,16 @@ export default class InsightFacade implements IInsightFacade {
                     json = fs.readFileSync("./data/"+ ids[0] + ".dat").toString();
             }
 
-
             let jonj = JSON.parse(json);
             var filtered_data: any;
             if(Object.keys(where).length === 0) {
-
                 filtered_data=jonj;
             }
             else {
-
                 var keys: any = Object.keys(where)[0];
                 var filter: any = where[keys];
                 filtered_data = helper(keys, filter, jonj);
             }
-
 
 
 
@@ -343,14 +342,8 @@ export default class InsightFacade implements IInsightFacade {
                 final_result=apply_result;
             }
 
-
-
-
-
             let column: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["COLUMNS"];
             let retData: any[] = [];
-
-
 
             for (let v of final_result) {
 
@@ -360,6 +353,7 @@ export default class InsightFacade implements IInsightFacade {
                 });
                 retData.push(newEntry);
             }
+
 
 
             if (!isUndefined(JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"])) {
@@ -386,18 +380,12 @@ export default class InsightFacade implements IInsightFacade {
 
                     let order: any = JSON.parse(JSON.stringify(query))["OPTIONS"]["ORDER"];
                     retData.sort(function (a: any, b: any) {
-                        console.log((order));
-                        if ((a[order] > b[order])) {
+                        if (a[order] > b[order]){
                             return 1;
                         }
-
-                        else {
-                            return -1;
+                        else{
+                            return 0;
                         }
-                        // if (typeof a[order] === "number") {
-                        //     return a[order] - b[order];
-                        // }
-                        // return a[order].toString().localeCompare(b[order].toString());
                     });
                 }
             }
@@ -415,21 +403,20 @@ export default class InsightFacade implements IInsightFacade {
 function sortingup(a:any,b:any,order:any){
 
     for(var i=0 ; i<order.length;i++) {
-
-            if ((a[order[i]] > b[order[i]])) {
-                return 1;
+        if ((a[order[i]] > b[order[i]])) {
+            return 1;
+        }
+        else if ((a[order[i]] == b[order[i]])) {
+            if(i!=order.length-1) {
+                continue;
             }
-            else if ((a[order[i]] == b[order[i]])) {
-                if (i != order.length - 1) {
-                    continue;
-                }
-                else {
-                    return 0;
-                }
+            else{
+                return 0;
             }
-            else {
-                return -1;
-            }
+        }
+        else {
+            return 0;
+        }
 
     }
 
@@ -450,7 +437,7 @@ function sortingdown(a:any,b:any,order:any){
             }
         }
         else {
-            return -1;
+            return 0;
         }
 
     }
@@ -745,9 +732,6 @@ function intersect(a:any,b:any) {
     return re;
 }
 
-
-
-
 function union(a: any, b: any) {
     if (a.length == 0) {
         return b;
@@ -763,11 +747,6 @@ function union(a: any, b: any) {
     re = b_after.concat(a);
     return re;
 }
-
-
-
-
-
 
 function groupBy_helper(list:any, gp:any) {
     var groups:any = {};
@@ -785,8 +764,6 @@ function groupBy_helper(list:any, gp:any) {
     }
     return groups;
 }
-
-
 
 function helper(key: string, filter: any, coursedata: any[]) {
     switch (key) {
@@ -837,7 +814,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
             var result = helper(a, b, coursedata);
 
             var courses: any = [];
-            var numbers: any = [];
+            var numbers: string[] = [];
 
             for (let n of result) {
                 numbers.push(n['courses_uuid']||n['rooms_name'])
