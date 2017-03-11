@@ -715,13 +715,13 @@ function intersect(a:any,b:any) {
     }
     let re:any[] = [];
     let actualTags = a.map(function (obj: any) {
-        return (obj.courses_uuid||obj.rooms_name);
+        return (+obj.courses_uuid||obj.rooms_name);
     });
     //return actualTags;
     //infinite loop here
     for (let bb of b) {
 
-        if ((actualTags.indexOf(bb.courses_uuid) >= 0)||(actualTags.indexOf(bb.rooms_name) >= 0)) {
+        if ((actualTags.indexOf(+bb.courses_uuid) >= 0)||(actualTags.indexOf(bb.rooms_name) >= 0)) {
             re.push(bb);
 
         }
@@ -736,11 +736,11 @@ function union(a: any, b: any) {
     }
     var re:any[] = [];
     var actualTags = a.map(function (obj: any) {
-        return (obj.courses_uuid||obj.rooms_name);
+        return (+obj.courses_uuid||obj.rooms_name);
     });
 
     var b_after = b.filter(function(bb:any) {
-        return ((actualTags.indexOf(bb.courses_uuid) < 0)&&(actualTags.indexOf(bb.rooms_name) < 0)); // if truthy then keep item
+        return ((actualTags.indexOf(+bb.courses_uuid) < 0)&&(actualTags.indexOf(bb.rooms_name) < 0)); // if truthy then keep item
     });
     re = b_after.concat(a);
     return re;
