@@ -717,6 +717,7 @@ function intersect(a:any,b:any) {
     let actualTags = a.map(function (obj: any) {
         return (obj.courses_uuid||obj.rooms_name);
     });
+    //return actualTags;
     //infinite loop here
     for (let bb of b) {
 
@@ -739,7 +740,7 @@ function union(a: any, b: any) {
     });
 
     var b_after = b.filter(function(bb:any) {
-        return ((actualTags.indexOf(bb.courses_uuid) == -1)&&(actualTags.indexOf(bb.rooms_name) == -1)); // if truthy then keep item
+        return ((actualTags.indexOf(bb.courses_uuid) < 0)&&(actualTags.indexOf(bb.rooms_name) < 0)); // if truthy then keep item
     });
     re = b_after.concat(a);
     return re;
@@ -809,26 +810,24 @@ function helper(key: string, filter: any, coursedata: any[]) {
             var b = filter[a];
             var result = helper(a, b, coursedata);
 
-            var courses: any = [];
-            var numbers: any = [];
+            var courses: any[] = [];
+            var numbers: any[] = [];
 
             for (let n of result) {
-                numbers.push(n['courses_uuid']||n['rooms_name']);
+                numbers.push(+n['courses_uuid']||n['rooms_name']);
             }
-            console.log("after 1st loop");
-            //infinite loop here
             for(let v of coursedata){
-                if((numbers.indexOf(v['courses_uuid']) < 0 )&&(numbers.indexOf(v['rooms_name']) < 0)){
+                if((numbers.indexOf(+v['courses_uuid']) < 0)&&(numbers.indexOf(v['rooms_name']) < 0)){
                     courses.push(v);
                 }
             }
-            console.log("after 2nd loop");
+
             return courses;
 
         case "EQ":
             var query_keys = Object.keys(filter)[0];
             var query_number = filter[query_keys];
-            var courses: any = [];
+            var courses: any[] = [];
             for (let v of coursedata) {
                 if (v[query_keys] == query_number) {
                     courses.push(v);
@@ -838,7 +837,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
         case "GT":
             var query_keys = Object.keys(filter)[0];
             var query_number = filter[query_keys];
-            var courses: any = [];//coursedata.filter(elem => (elem as any)[query_keys] > query_number);
+            var courses: any[] = [];//coursedata.filter(elem => (elem as any)[query_keys] > query_number);
             for (let v of coursedata) {
                 if (v[query_keys] > query_number) {
                     courses.push(v);
@@ -849,7 +848,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
         case "LT":
             var query_keys = Object.keys(filter)[0];
             var query_number = filter[query_keys];
-            var courses: any = [];//coursedata.filter(elem => (elem as any)[query_keys] > query_number);
+            var courses: any[] = [];//coursedata.filter(elem => (elem as any)[query_keys] > query_number);
             for (let v of coursedata) {
                 if (v[query_keys] < query_number) {
                     courses.push(v);
@@ -860,7 +859,7 @@ function helper(key: string, filter: any, coursedata: any[]) {
         case "IS":
             var query_keys = Object.keys(filter)[0];
             var query_number = filter[query_keys];
-            var courses: any = [];
+            var courses: any[] = [];
             for (let v of coursedata) {
                 if (query_number.indexOf("*") == 0 && query_number.length > 1) {
                     if (query_number.indexOf("*", 1) == query_number.length - 1) {
