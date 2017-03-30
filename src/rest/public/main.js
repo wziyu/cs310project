@@ -947,18 +947,17 @@ function scheduling(courseslist,roomslist){
 
     console.log("Following Courses");
     //console.log("bad fraction");
-    //var count=0;
+    var count=0;
     var notscheduled=[];
     for(var i=0;i<courseslist2.length;i++) {
         if(courseslist2[i]["mark"] == 0) {
-            //count++;
+            count++;
             //console.log(courseslist2[i]["courses_name"]+" section:"+courseslist2[i]["section_num"]);
             notscheduled.push(courseslist2[i]["courses_name"]+" section:"+courseslist2[i]["section_num"]);
         }
     }
-    // let fraction:number;
-    // fraction=count/(courseslist2.length);
-    // console.log(fraction);
+    var fraction=count/(courseslist2.length);
+    var fraction2 = fraction.toFixed(3);
     for(var i=0;i<roomslist.length;i++) {
 
         for(var j=0;j<roomslist[i]["roomsMWF"].length;j++){
@@ -978,7 +977,7 @@ function scheduling(courseslist,roomslist){
             roomslist[i]["roomsTTH"][k]=tempjson;
         }
     }
-    var unsch={"unscheduled course":notscheduled};
+    var unsch={"unscheduled course":notscheduled,"fraction":fraction2};
     roomslist.push(unsch);
     return roomslist;
 }
