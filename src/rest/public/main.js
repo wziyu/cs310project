@@ -379,6 +379,8 @@ $(document).ready(function(){
                 course_list = res;
                 // use rooms_list and course_list to do your scheduling
                 // generate an output list by your scheduler then I will write build time table functions
+                var feedback = scheduling(course_list, rooms_list);
+                buildTimeTable(feedback, $("#output_body"));
             });
         }
     });
@@ -647,8 +649,47 @@ function buildHtmlTable(arr, selector) {
     selector.append(entry);
 }
 
-function buildTimeTable(arr, selector){
+function buildTimeTable(arr, selector)
+{
+    selector.empty();
+    if(arr.length === 0)
+        return;
+    for(var i=0; i<arr.length; i++)
+    {
+        var name = arr[i]["rooms_name"];
+        var seats = arr[i]["rooms_seats"];
+        var mwf = arr[i]["roomsMWF"];
+        var tth = arr[i]["roomsTTH"];
+        var entry = "<table>";
+        entry += "<caption>" + "Room Name: " + name + " Capacity: " + seats + "</caption>";
+        entry += "<tr><th>Mon-Wed-Fri</th>" + "<th>Courses</th>" + "<th>Tues-Thurs</th>" + "<th>Courses</th></tr>";
+        for(var j=0; j<mwf.length; j++)
+        {
+            if(j<=5) {
+                var mwf_key = Object.keys(mwf[j]);
+                var tth_key = Object.keys(tth[j]);
+                entry += "<tr>";
+                entry += "<td>" + mwf_key + "</td><td>"
+                    + mwf[j][mwf_key] + "</td><td>"
+                    + tth_key + "</td><td>"
+                    + tth[j][tth_key] + "</td>";
+                entry += "</tr>";
+            }
+            else if(j>5)
+            {
+                var key = Object.keys(mwf[j]);
+                entry += "<tr>";
+                entry += "<td>" + key + "</td><td>"
+                    + mwf[j][key] + "</td><td>"
+                    + " " + "</td><td>"
+                    + " " + "</td>";
+                entry += "</tr>";
+            }
+        }
 
+    }
+    entry += "</table>";
+    selector.append(entry);
 }
 
 function processResultBySize(result, size, ops, id){
@@ -782,3 +823,283 @@ function distance(lat1, lon1, lat2, lon2, unit)
 }
 
 //paste and modify your functions here, do not paste your functions within my functions
+function nextAvailableIndex(room){
+    for(var i=0; i<room.length; i++){
+        if(room[i]["valid"] === 0)
+            return i;
+    }
+    return -1;
+}
+
+function scheduling(courseslist,roomslist){
+    var courseslist2=sectioninfo(courseslist);
+    //console.log(courseslist2);
+    roomslist.sort(function (a, b) {
+        if (a["rooms_seats"]> b["rooms_seats"]){
+            return 1;
+        }
+        else if(a["rooms_seats"] < b["rooms_seats"]){
+            return -1;
+        }
+        else
+            return 0;
+    });
+    courseslist2.sort(function (a, b) {
+        if (a["sectionsize"]> b["sectionsize"]){
+            return 1;
+        }
+        else if(a["sectionsize"] < b["sectionsize"]){
+            return -1;
+        }
+        else
+            return 0;
+    });
+
+
+    var map={};
+    for (var p=0;p<courseslist2.length;p++){
+        map[courseslist2[p]["courses_name"]]="";
+    }
+
+
+    for (var i=0;i<roomslist.length;i++){
+
+        if(typeof roomslist[i]["roomsMWF"] === "undefined") {
+
+            roomslist[i]["roomsMWF"] = [];
+
+            for (var q = 0; q < 9; q++) {
+                roomslist[i]["roomsMWF"][q] = {valid:0, value:""};
+            }
+
+        }
+        if(typeof roomslist[i]["roomsTTH"] === "undefined") {
+            roomslist[i]["roomsTTH"] = [];
+            for (var t = 0; t < 6; t++) {
+                roomslist[i]["roomsTTH"][t] = {valid:0, value:""};
+            }
+
+        }
+
+
+        for (var j=0;j<courseslist2.length;j++){
+            if(courseslist2[j]["mark"] !== 1) {
+                // check if the room is big enough and room is not full.
+                if ((roomslist[i]["rooms_seats"] >= courseslist2[j]["sectionsize"])) {
+                    // find the first available index.
+
+                    var index = nextAvailableIndex(roomslist[i]["roomsMWF"]);
+
+
+                    if (index !== -1) {
+                        // check if the index is valid for the current course, if not increment the index till it's valid.
+                        var full_flag = 0;
+
+
+                        while ((map[courseslist2[j]["courses_name"]].includes("MWF" + index))
+                        || (roomslist[i]["roomsMWF"][index]["valid"] === 1)) {
+                            index++;
+                            if (index === 8) {
+                                full_flag = 1;
+                                break;
+                            }
+                        }
+
+                        if (full_flag !== 1) {
+                            // add the course to
+                            roomslist[i]["roomsMWF"][index] = {valid: 1, value: courseslist2[j]["courses_name"] +" section:"+courseslist2[j]["section_num"]
+                            +" size:"+courseslist2[j]["sectionsize"]};
+                            courseslist2[j]["mark"] = 1;
+                            map[courseslist2[j]["courses_name"]] += ("MWF" + index);
+                        }
+                    }
+                }
+            }
+            if(courseslist2[j]["mark"] !== 1) {
+                if ((roomslist[i]["rooms_seats"] >= courseslist2[j]["sectionsize"])) {
+
+                    var index = nextAvailableIndex(roomslist[i]["roomsTTH"]);
+                    if(index !== -1) {
+                        // check if the index is valid for the current course, if not increment the index till it's valid.
+                        var full_flag = 0;
+                        while(map[courseslist2[j]["courses_name"]].includes("TTH"+index)
+                        || roomslist[i]["roomsTTH"][index]["valid"] === 1){
+                            index++;
+                            if(index === 5) {
+                                full_flag = 1;break;
+                            }
+                        }
+
+                        if(full_flag !== 1) {
+                            // add the course to
+                            roomslist[i]["roomsTTH"][index] = {valid: 1, value: courseslist2[j]["courses_name"] +" section:"+courseslist2[j]["section_num"]
+                            +" size:"+courseslist2[j]["sectionsize"]};
+                            courseslist2[j]["mark"] = 1;
+                            map[courseslist2[j]["courses_name"]] += "TTH" + index;
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
+
+    console.log("Following Courses");
+    //console.log("bad fraction");
+    var count=0;
+    for(var i=0;i<courseslist2.length;i++) {
+        if(courseslist2[i]["mark"] === 0) {
+            count++;
+            console.log(courseslist2[i]["courses_name"]+" section:"+courseslist2[i]["section_num"]);
+        }
+    }
+    // let fraction:number;
+    // fraction=count/(courseslist2.length);
+    // console.log(fraction);
+    for(var i=0;i<roomslist.length;i++) {
+
+        for(var j=0;j<roomslist[i]["roomsMWF"].length;j++){
+            var temptime=mwftable(j);
+            var tempvalue=roomslist[i]["roomsMWF"][j]["value"];
+            var tempjson={};
+            tempjson[temptime]=tempvalue;
+            roomslist[i]["roomsMWF"][j]=tempjson;
+
+        }
+
+        for(var k=0;k<roomslist[i]["roomsTTH"].length;k++){
+            var temptime=tthtable(k);
+            var tempvalue=roomslist[i]["roomsTTH"][k]["value"];
+            var tempjson={};
+            tempjson[temptime]=tempvalue;
+            roomslist[i]["roomsTTH"][k]=tempjson;
+        }
+    }
+    return roomslist;
+}
+
+function mwftable(time){
+    switch(time){
+        case 0:
+            return "8:00-9:00";
+        case 1:
+            return "9:00-10:00";
+        case 2:
+            return "10:00-11:00";
+        case 3:
+            return "11:00-12:00";
+        case 4:
+            return "12:00-13:00";
+        case 5:
+            return "13:00-14:00";
+        case 6:
+            return "14:00-15:00";
+        case 7:
+            return "15:00-16:00";
+        case 8:
+            return "16:00-17:00";
+        default:
+            return "after 17:00";
+
+    }
+}
+
+function tthtable(time){
+    switch(time){
+        case 0:
+            return "8:00-9:30";
+        case 1:
+            return "9:30-11:00";
+        case 2:
+            return "11:00-12:30";
+        case 3:
+            return "12:30-14:00";
+        case 4:
+            return "14:00-15:30";
+        case 5:
+            return "15:30-17:00";
+
+        default:
+            return "after 17:00";
+
+    }
+}
+
+
+function sectioninfo(data){
+    var largestsection = {};
+    var temp;
+    var count;
+    var c;
+    var maxcount;
+    for (var i = 0; i < data.length; i++) {
+        temp="";
+        count=0;
+        var keys = Object.keys(data[i]);
+
+        for (var t=0;t<keys.length;t++) {
+            var k=keys[t];
+            if (k === "courses_dept") {
+                temp += data[i][k];
+            }
+            if (k === "courses_id") {
+                temp += data[i][k];
+            }
+            if (k === "maxpass") {
+                count+=data[i][k];
+            }
+            if (k === "maxfail") {
+                count+=data[i][k];
+            }
+        }
+
+        if (temp in largestsection) {
+            largestsection[temp].push({"c":count});
+        } else {
+            largestsection[temp] = [{"c":count}];
+        }
+    }
+
+    var key2=Object.keys(largestsection);
+    for(var q=0;q<key2.length;q++){
+        var k=key2[q];
+        var tempcount=largestsection[k];
+        maxcount=[];
+        for(var i=0;i<tempcount.length;i++){
+            var k3=Object.keys(tempcount[i]);
+            var k4=k3[0];
+
+            c=tempcount[i][k4];
+            maxcount.push(c);
+        }
+        var max=Math.max.apply(null,maxcount);
+        largestsection[k]={"sectionsize":max,"num":Math.ceil(maxcount.length/3)};
+
+    }
+
+    var coursesection=[];
+    for(var g=0;g<key2.length;g++){
+        var k=key2[g];
+        var temparray=[];
+        var tempcount=largestsection[k];
+
+
+        var k3=Object.keys(tempcount);
+        var k4=k3[0];
+        var k5=k3[1];
+        var tempsize=tempcount[k4];
+        for(var j=1;j<=tempcount[k5];j++){
+            var tempcourse={"courses_name":k,"sectionsize":tempsize,"section_num":j,"mark":0};
+            temparray.push(tempcourse);
+        }
+
+
+        for (var b=0;b<temparray.length;b++){
+            coursesection.push(temparray[b]);
+        }
+
+
+    }
+    return coursesection;
+}
