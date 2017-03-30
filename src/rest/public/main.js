@@ -886,17 +886,7 @@ function nextAvailableIndex(room){
 
 function schedule(courseslist,roomslist){
     var courseslist2=sectioninfo(courseslist);
-    //console.log(courseslist2);
-    roomslist.sort(function (a, b) {
-        if (a["rooms_seats"]> b["rooms_seats"]){
-            return 1;
-        }
-        else if(a["rooms_seats"] < b["rooms_seats"]){
-            return -1;
-        }
-        else
-            return 0;
-    });
+
     courseslist2.sort(function (a, b) {
         if (a["sectionsize"]> b["sectionsize"]){
             return 1;
@@ -942,8 +932,6 @@ function schedule(courseslist,roomslist){
                     // find the first available index.
 
                     var index = nextAvailableIndex(roomslist[i]["roomsMWF"]);
-
-
                     if (index !== -1) {
                         // check if the index is valid for the current course, if not increment the index till it's valid.
                         var full_flag = 0;
