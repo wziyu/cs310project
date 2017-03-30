@@ -361,6 +361,7 @@ $(document).ready(function(){
     });
     $("#confirm").click(function (e)
     {
+        $("#output_head").empty();
         e.preventDefault();
         var course_params = $("#p1").text().split(";");
         var room_params = $("#p2").text().split(";");
@@ -379,12 +380,65 @@ $(document).ready(function(){
                 course_list = res;
                 // use rooms_list and course_list to do your scheduling
                 // generate an output list by your scheduler then I will write build time table functions
-                var feedback = scheduling(course_list, rooms_list);
+                var feedback = schedule(course_list, rooms_list);
                 buildTimeTable(feedback, $("#output_body"));
+                $("#report").prop('disabled', false).click(function (e)
+                {
+                    generateReport($("#output_head"), feedback);
+                });
             });
         }
     });
 });
+
+function generateReport(selector, feedback)
+{
+    selector.empty();
+    var unscheduled = feedback[feedback.length-1]["unscheduled course"];
+    var quality = feedback[feedback.length-1]["fraction"];
+    var scheduled = [];
+    if(feedback.length === 0)
+        return;
+    for(var i=0; i<feedback.length-1; i++)
+    {
+        var mwf = feedback[i]["roomsMWF"];
+        var tth = feedback[i]["roomsTTH"];
+        for(var j=0; j<mwf.length; j++)
+        {
+            var obj = mwf[j];
+            var obj_key = Object.keys(obj);
+            if(typeof obj[obj_key] !== undefined && obj[obj_key] !== "" && obj[obj_key] !== null)
+                scheduled.push(obj[obj_key]);
+        }
+        for(var k=0; k<tth.length; k++)
+        {
+            var obj1 = tth[k];
+            var obj1_key = Object.keys(obj1);
+            if(typeof obj1[obj1_key] !== undefined && obj1[obj1_key] !== "" && obj1[obj1_key] !== null)
+                scheduled.push(obj1[obj1_key]);
+        }
+    }
+    var count = 0;
+    var str = "";
+    str += "<h3>" + "You have successfully scheduled: " + scheduled.length + " Courses" + "</h3>";
+    str += "<h4>They are:</h4>";
+    for(var x=0; x<scheduled.length; x++)
+    {
+        str+= "<p>" + scheduled[x] + "</p>";
+        count+= (+scheduled[x].split("size:")[1]);
+    }
+    if(unscheduled.length>0) {
+        str += "<h3>" + "You failed to schedule the following courses: " + "</h3>";
+        for(var y=0; y<unscheduled.length; y++)
+        {
+            str+= "<p>" + unscheduled[y] + "</p>";
+        }
+    }
+    str += "<h3>" + "You have approximately arranged course for: " + count + " students</h3>";
+    str += "<h3>" + "The quality of your schedule is(Lower is better): " + quality + "</h3>";
+    selector.append(str);
+
+}
 
 function generateCourses(list)
 {
@@ -654,7 +708,7 @@ function buildTimeTable(arr, selector)
     selector.empty();
     if(arr.length === 0)
         return;
-    for(var i=0; i<arr.length; i++)
+    for(var i=0; i<arr.length-1; i++)
     {
         var name = arr[i]["rooms_name"];
         var seats = arr[i]["rooms_seats"];
@@ -686,10 +740,9 @@ function buildTimeTable(arr, selector)
                 entry += "</tr>";
             }
         }
-
+        entry += "</table>";
+        selector.append(entry);
     }
-    entry += "</table>";
-    selector.append(entry);
 }
 
 function processResultBySize(result, size, ops, id){
@@ -831,7 +884,7 @@ function nextAvailableIndex(room){
     return -1;
 }
 
-function scheduling(courseslist,roomslist){
+function schedule(courseslist,roomslist){
     var courseslist2=sectioninfo(courseslist);
     //console.log(courseslist2);
     roomslist.sort(function (a, b) {
@@ -944,15 +997,11 @@ function scheduling(courseslist,roomslist){
         }
     }
 
-
-    console.log("Following Courses");
-    //console.log("bad fraction");
-    var count=0;
     var notscheduled=[];
+    var count = 0;
     for(var i=0;i<courseslist2.length;i++) {
-        if(courseslist2[i]["mark"] == 0) {
+        if(courseslist2[i]["mark"] === 0) {
             count++;
-            //console.log(courseslist2[i]["courses_name"]+" section:"+courseslist2[i]["section_num"]);
             notscheduled.push(courseslist2[i]["courses_name"]+" section:"+courseslist2[i]["section_num"]);
         }
     }
