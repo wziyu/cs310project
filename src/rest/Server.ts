@@ -53,13 +53,13 @@ export default class Server {
                 that.rest = restify.createServer({
                     name: 'insightUBC'
                 });
-
-                that.rest.get('/', function (req: restify.Request, res: restify.Response, next: restify.Next) {
-                    res.send(200);
-                    return next();
-                });
-
                 that.rest.use(restify.bodyParser({mapParams: true, mapFiles: true}));
+
+                that.rest.get('/.*/', restify.serveStatic({
+                    directory: __dirname + "/public",
+                    default: "index.html"
+                }));
+
 
                 // provides the echo service
                 // curl -is  http://localhost:4321/echo/myMessage
