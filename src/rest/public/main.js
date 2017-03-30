@@ -374,19 +374,83 @@ $(document).ready(function(){
                 var obj={"rooms_name": name, "rooms_seats": seats};
                 rooms_list.push(obj);
             }
-            for(var j=0; j<course_params.length-1;j++)
-            {
-                var dept = course_params[i].split(" ")[0];
-                var number = course_params[i].split(" ")[1];
-                var obj1={"courses_dept": dept, "courses_id": number};
-                course_list.push(obj1);
-            }
-            console.log(course_list);
-            console.log(rooms_list);
+
+            generateCourses(course_params).then(function (res){
+                course_list = res;
+                // use rooms_list and course_list to do your scheduling
+                // generate an output list by your scheduler then I will write build time table functions
+            });
         }
     });
 });
 
+function generateCourses(list)
+{
+    return new Promise(function (resolve, reject) {
+        var query = {};
+        var or = [];
+        for (var i = 0; i < list.length - 1; i++) {
+            var arr = [];
+            var is = {"IS": {}};
+            is.IS.courses_dept = list[i].split(" ")[0];
+            var is2 = {"IS": {}};
+            is2.IS.courses_id = list[i].split(" ")[1];
+            var eq = {"EQ": {}};
+            eq.EQ.courses_year = 2014;
+            arr.push(is);
+            arr.push(is2);
+            arr.push(eq);
+            var obj = {"AND": arr};
+            or.push(obj);
+        }
+        query.WHERE = {"OR": or};
+        query.OPTIONS = {};
+        query.OPTIONS.COLUMNS = [
+            "courses_dept",
+            "courses_id",
+            "courses_uuid",
+            "countid",
+            "maxpass",
+            "maxfail"
+        ];
+        query.OPTIONS.ORDER = {
+            "dir": "UP",
+            "keys": ["courses_dept", "courses_id"]
+        };
+        query.OPTIONS.FORM = "TABLE";
+        query.TRANSFORMATIONS = {
+            "GROUP": ["courses_dept", "courses_id", "courses_uuid"],
+            "APPLY": [
+                {
+                    "countid": {
+                        "COUNT": "courses_uuid"
+                    }
+                },
+                {
+                    "maxpass": {
+                        "MAX": "courses_pass"
+                    }
+                },
+                {
+                    "maxfail": {
+                        "MAX": "courses_fail"
+                    }
+                }
+            ]
+        };
+        $.ajax({
+            type: 'POST',
+            url: 'http://localhost:4321/query',
+            data: JSON.stringify(query),
+            contentType: "application/json",
+            dataType: 'json'
+        }).done(function (data) {
+            resolve(data.result);
+        }).fail(function (err) {
+            reject(err);
+        });
+    });
+}
 function locateByParams(params, id)
 {
     return new Promise(function (resolve, reject){
@@ -437,8 +501,6 @@ function locateByParams(params, id)
                 and_obj = {"AND": and3};
                 query.WHERE = and_obj;
             }
-            else
-                query.WHERE = {};
             query.OPTIONS = {};
             query.OPTIONS.COLUMNS =
                 [
@@ -718,3 +780,5 @@ function distance(lat1, lon1, lat2, lon2, unit)
     if (unit==="N") { dist = dist * 0.8684 }
     return dist;
 }
+
+//paste and modify your functions here, do not paste your functions within my functions
